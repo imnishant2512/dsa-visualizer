@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStepPlayer } from '../../../engine/useStepPlayer';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { Narration } from '../../../shared/components/Narration';
+import { RunBar } from '../../../shared/components/RunBar';
 import { ShareLink } from '../../../shared/components/ShareLink';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { randomSeed } from '../../../shared/utils/random';
@@ -14,6 +15,7 @@ import {
   type ArrayShape,
 } from '../../../shared/utils/randomArray';
 import { sortEngine } from '../engine';
+import { narrateSortStep, sortVisualKind } from '../narrate';
 import { MAX_SIZE_BY_ID, SORT_BY_ID, SORT_ALGORITHMS } from '../registry';
 import { SORT_STAT_KEYS } from '../types';
 import { SortPanel } from './SortPanel';
@@ -46,6 +48,9 @@ export function SortingPage() {
   const [raceMode, setRaceMode] = useState(() => Boolean(params.get('vs')));
   const [idA, setIdA] = useState(() => readAlgorithm(params.get('algo')) ?? 'quick');
   const [idB, setIdB] = useState(() => readAlgorithm(params.get('vs')) ?? 'merge');
+  // Purely presentational: the run bar carries a one-line summary, and this is
+  // whether the controls behind that summary are showing.
+  const [setupOpen, setSetupOpen] = useState(false);
 
   const baseArray = useMemo(() => makeArray(shape, size, seed), [shape, size, seed]);
 
@@ -143,7 +148,7 @@ export function SortingPage() {
     if (raceMode) playerB.prev();
   };
 
-  const handleRestart = () => {
+  const handleRewind = () => {
     setPlaying(false);
     playerA.reset();
     playerB.reset();
@@ -155,6 +160,10 @@ export function SortingPage() {
     onStepForward: handleStepForward,
   });
 
+  const defA = SORT_BY_ID[idA];
+  const shapeLabel = ARRAY_SHAPES.find((option) => option.id === shape)?.label ?? 'Random';
+  const stepKinds = useMemo(() => playerA.steps.map(sortVisualKind), [playerA.steps]);
+
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -165,58 +174,10 @@ export function SortingPage() {
         </p>
       </header>
 
-      <div className={styles.setup}>
-        <label>
-          Size
-          <input
-            type="range"
-            min={ARRAY_SIZE.min}
-            max={sizeCap}
-            value={size}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              setSize(next);
-              regenerate(shape, next);
-            }}
-          />
-          <span className={styles.readout}>{size}</span>
-        </label>
-
-        <label>
-          Shape
-          <select
-            value={shape}
-            onChange={(e) => {
-              const next = e.target.value as ArrayShape;
-              setShape(next);
-              regenerate(next, size);
-            }}
-          >
-            {ARRAY_SHAPES.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button onClick={() => regenerate(shape, size)}>New Array</button>
-        <ShareLink />
-
-        <label className={styles.toggle}>
-          <input
-            type="checkbox"
-            checked={raceMode}
-            onChange={(e) => {
-              setPlaying(false);
-              setRaceMode(e.target.checked);
-            }}
-          />
-          Race two algorithms
-        </label>
-      </div>
-
-      <PlaybackControls
+      <RunBar
+        summary={`${defA.label} · ${size} · ${shapeLabel} · seed ${seed}`}
+        onEditSetup={() => setSetupOpen((open) => !open)}
+        setupOpen={setupOpen}
         isPlaying={playing}
         canStepBack={playerA.canStepBack || (raceMode && playerB.canStepBack)}
         canStepForward={playerA.canStepForward || (raceMode && playerB.canStepForward)}
@@ -226,7 +187,6 @@ export function SortingPage() {
         onToggle={handleToggle}
         onStepBack={handleStepBack}
         onStepForward={handleStepForward}
-        onReset={handleRestart}
         onSpeedChange={setSpeedMs}
         // Scrubbing two runs of different lengths to one cursor is meaningless.
         onSeek={
@@ -238,12 +198,79 @@ export function SortingPage() {
               }
         }
         seekDisabledReason="Scrubbing is off in race mode — the two runs have different lengths, so one cursor cannot mean the same thing for both."
-        resetLabel="Restart"
+        resets={[
+          { label: 'Rewind', onClick: handleRewind, title: 'Back to step 0, same array' },
+          {
+            label: 'New array',
+            onClick: () => regenerate(shape, size),
+            danger: true,
+            title: 'Discard this run and generate a fresh array',
+          },
+        ]}
+        // The tick strip is painted from panel A; in race mode the two runs
+        // have different lengths, so one strip cannot describe both.
+        stepKinds={raceMode ? undefined : stepKinds}
       />
+
+      {setupOpen && (
+        <div className={styles.setup}>
+          <label>
+            Size
+            <input
+              type="range"
+              min={ARRAY_SIZE.min}
+              max={sizeCap}
+              value={size}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setSize(next);
+                regenerate(shape, next);
+              }}
+            />
+            <span className={styles.readout}>{size}</span>
+          </label>
+
+          <label>
+            Shape
+            <select
+              value={shape}
+              onChange={(e) => {
+                const next = e.target.value as ArrayShape;
+                setShape(next);
+                regenerate(next, size);
+              }}
+            >
+              {ARRAY_SHAPES.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <ShareLink />
+
+          <label className={styles.toggle}>
+            <input
+              type="checkbox"
+              checked={raceMode}
+              onChange={(e) => {
+                setPlaying(false);
+                setRaceMode(e.target.checked);
+              }}
+            />
+            Race two algorithms
+          </label>
+        </div>
+      )}
+
+      <Narration tag={playerA.frame.cursor >= 0 ? `Step ${playerA.frame.cursor + 1}` : 'Ready'}>
+        {narrateSortStep(playerA.currentStep, playerA.frame.state)}
+      </Narration>
 
       <div className={raceMode ? styles.race : styles.single}>
         <SortPanel
-          def={SORT_BY_ID[idA]}
+          def={defA}
           frame={playerA.frame}
           currentStep={playerA.currentStep}
           maxValue={maxValue}

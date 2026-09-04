@@ -1,0 +1,39 @@
+.line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--bg-raised);
+  /* The accent bar is the only ornament — it marks the band without a box. */
+  border-left: 3px solid var(--accent);
+}
+
+.tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/*
+ * Split by intent: a refusal is not a note. Tinted with the ramp's swap colour
+ * rather than a new red, so the page still holds one accent hue.
+ */
+.refusal {
+  background: var(--danger-tint);
+  border-left-color: var(--v-swap);
+}
+
+.refusal .text,
+.refusal .tag {
+  color: var(--danger-text);
+}

@@ -45,7 +45,7 @@
 }
 
 .toolActive {
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
@@ -90,7 +90,7 @@
 .note {
   padding: 4px 10px;
   border-radius: var(--radius-sm);
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   color: var(--accent);
   font-family: var(--mono);
 }

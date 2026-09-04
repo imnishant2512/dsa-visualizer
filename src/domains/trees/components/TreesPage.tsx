@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useInteractiveStructure } from '../../../engine/useInteractiveStructure';
 import { OperationHistoryPanel } from '../../../shared/components/OperationHistoryPanel';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { NO_STEPS, stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -112,6 +113,9 @@ export function TreesPage() {
       : Math.floor(Math.log2(heap.displayState.items.length)) + 1
     : nodeHeight(tree.displayState, tree.displayState.rootId);
 
+
+  const activeSteps = controller.active?.steps ?? NO_STEPS;
+  const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -184,7 +188,8 @@ export function TreesPage() {
         </button>
       </div>
 
-      <PlaybackControls
+      <RunBar
+        summary={controller.active?.label ?? 'No operation running'}
         isPlaying={playing}
         canStepBack={controller.canStepBack}
         canStepForward={controller.canStepForward}
@@ -200,16 +205,33 @@ export function TreesPage() {
           setPlaying(false);
           controller.next();
         }}
-        onReset={() => {
-          setPlaying(false);
-          controller.cancel();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           controller.seekTo(cursor);
         }}
-        resetLabel="Cancel operation"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to the start of this operation',
+            disabled: !controller.active,
+            onClick: () => {
+              setPlaying(false);
+              controller.seekTo(-1);
+            },
+          },
+          {
+            label: 'Cancel operation',
+            title: 'Drop the operation in flight — the tree is left untouched',
+            disabled: !controller.active,
+            danger: true,
+            onClick: () => {
+              setPlaying(false);
+              controller.cancel();
+            },
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.workspace}>

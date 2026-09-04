@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStepPlayer } from '../../../engine/useStepPlayer';
 import { BarChart, type BarState } from '../../../shared/components/BarChart';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { stepKindsByName } from '../../../shared/components/stepKinds';
 import { ShareLink } from '../../../shared/components/ShareLink';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
@@ -136,6 +137,8 @@ export function SearchingPage() {
     onStepForward: handleStepForward,
   });
 
+
+  const stepKinds = useMemo(() => stepKindsByName(player.steps), [player.steps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -202,7 +205,8 @@ export function SearchingPage() {
         {def.requiresSorted && <em>Requires sorted input — this array is always ascending.</em>}
       </p>
 
-      <PlaybackControls
+      <RunBar
+        summary={`${def.label} · ${size} · target ${target}`}
         isPlaying={playing}
         canStepBack={player.canStepBack}
         canStepForward={player.canStepForward}
@@ -212,16 +216,28 @@ export function SearchingPage() {
         onToggle={handleToggle}
         onStepBack={handleStepBack}
         onStepForward={handleStepForward}
-        onReset={() => {
-          setPlaying(false);
-          player.reset();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           player.seekTo(cursor);
         }}
-        resetLabel="Restart"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to step 0, same array',
+            onClick: () => {
+              setPlaying(false);
+              player.reset();
+            },
+          },
+          {
+            label: 'New array',
+            title: 'Discard this run and generate a fresh array',
+            danger: true,
+            onClick: () => regenerate(size),
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.workspace}>

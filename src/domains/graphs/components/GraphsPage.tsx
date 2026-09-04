@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useInteractiveStructure } from '../../../engine/useInteractiveStructure';
 import { OperationHistoryPanel } from '../../../shared/components/OperationHistoryPanel';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { NO_STEPS, stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -123,6 +124,9 @@ export function GraphsPage() {
 
   const runnable = startId !== null && state.nodes[startId] !== undefined;
 
+
+  const activeSteps = graph.active?.steps ?? NO_STEPS;
+  const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -203,7 +207,8 @@ export function GraphsPage() {
         )}
       </p>
 
-      <PlaybackControls
+      <RunBar
+        summary={graph.active?.label ?? 'No operation running'}
         isPlaying={playing}
         canStepBack={graph.canStepBack}
         canStepForward={graph.canStepForward}
@@ -219,16 +224,33 @@ export function GraphsPage() {
           setPlaying(false);
           graph.next();
         }}
-        onReset={() => {
-          setPlaying(false);
-          graph.cancel();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           graph.seekTo(cursor);
         }}
-        resetLabel="Cancel operation"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to the start of this operation',
+            disabled: !graph.active,
+            onClick: () => {
+              setPlaying(false);
+              graph.seekTo(-1);
+            },
+          },
+          {
+            label: 'Cancel operation',
+            title: 'Drop the operation in flight — the graph is left untouched',
+            disabled: !graph.active,
+            danger: true,
+            onClick: () => {
+              setPlaying(false);
+              graph.cancel();
+            },
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.readoutRow}>

@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useInteractiveStructure } from '../../../engine/useInteractiveStructure';
 import { OperationHistoryPanel } from '../../../shared/components/OperationHistoryPanel';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { NO_STEPS, stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -75,6 +76,9 @@ export function HashTablesPage() {
       ? insertPseudocode(state.strategy)
       : table.active?.pseudocode;
 
+
+  const activeSteps = table.active?.steps ?? NO_STEPS;
+  const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -129,7 +133,8 @@ export function HashTablesPage() {
         </button>
       </div>
 
-      <PlaybackControls
+      <RunBar
+        summary={table.active?.label ?? 'No operation running'}
         isPlaying={playing}
         canStepBack={table.canStepBack}
         canStepForward={table.canStepForward}
@@ -145,16 +150,33 @@ export function HashTablesPage() {
           setPlaying(false);
           table.next();
         }}
-        onReset={() => {
-          setPlaying(false);
-          table.cancel();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           table.seekTo(cursor);
         }}
-        resetLabel="Cancel operation"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to the start of this operation',
+            disabled: !table.active,
+            onClick: () => {
+              setPlaying(false);
+              table.seekTo(-1);
+            },
+          },
+          {
+            label: 'Cancel operation',
+            title: 'Drop the operation in flight — the table is left untouched',
+            disabled: !table.active,
+            danger: true,
+            onClick: () => {
+              setPlaying(false);
+              table.cancel();
+            },
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.readoutRow}>

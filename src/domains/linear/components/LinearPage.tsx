@@ -2,7 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { useInteractiveStructure } from '../../../engine/useInteractiveStructure';
 import { OperationHistoryPanel } from '../../../shared/components/OperationHistoryPanel';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { NO_STEPS, stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -110,6 +111,9 @@ export function LinearPage() {
   // Only the array exposes positional operations; everything else works at the ends.
   const needsIndex = variant === 'array';
 
+
+  const activeSteps = controller.active?.steps ?? NO_STEPS;
+  const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -178,7 +182,8 @@ export function LinearPage() {
         </button>
       </div>
 
-      <PlaybackControls
+      <RunBar
+        summary={controller.active?.label ?? 'No operation running'}
         isPlaying={playing}
         canStepBack={controller.canStepBack}
         canStepForward={controller.canStepForward}
@@ -194,16 +199,33 @@ export function LinearPage() {
           setPlaying(false);
           controller.next();
         }}
-        onReset={() => {
-          setPlaying(false);
-          controller.cancel();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           controller.seekTo(cursor);
         }}
-        resetLabel="Cancel operation"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to the start of this operation',
+            disabled: !controller.active,
+            onClick: () => {
+              setPlaying(false);
+              controller.seekTo(-1);
+            },
+          },
+          {
+            label: 'Cancel operation',
+            title: 'Drop the operation in flight — the structure is left untouched',
+            disabled: !controller.active,
+            danger: true,
+            onClick: () => {
+              setPlaying(false);
+              controller.cancel();
+            },
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.workspace}>

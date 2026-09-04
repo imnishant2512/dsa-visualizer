@@ -56,7 +56,7 @@
 
 .note {
   padding: 6px 10px;
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 12px;

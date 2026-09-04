@@ -44,7 +44,7 @@
 }
 
 .toolActive {
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;

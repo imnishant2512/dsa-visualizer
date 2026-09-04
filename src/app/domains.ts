@@ -2,6 +2,8 @@
 export interface DomainMeta {
   path: string;
   label: string;
+  /** Nav cells are uppercase and cannot wrap, so a long label needs a short form. */
+  navLabel?: string;
   blurb: string;
   icon: string;
 }
@@ -28,6 +30,7 @@ export const DOMAINS: DomainMeta[] = [
   {
     path: '/linear/array',
     label: 'Linear structures',
+    navLabel: 'Linear',
     blurb: 'Array, stack, queue and linked list operations.',
     icon: '📦',
   },

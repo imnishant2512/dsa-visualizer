@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useStepPlayer } from '../../../engine/useStepPlayer';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -158,6 +159,8 @@ export function PathfindingPage() {
       ? 'No route exists between start and end'
       : null;
 
+
+  const stepKinds = useMemo(() => stepKindsByName(player.steps), [player.steps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -208,7 +211,8 @@ export function PathfindingPage() {
         {!def.weighted && <em>Ignores terrain weights — it treats every open cell as equal.</em>}
       </p>
 
-      <PlaybackControls
+      <RunBar
+        summary={`${def.label} · ${COLS}×${ROWS} grid`}
         isPlaying={playing}
         canStepBack={player.canStepBack}
         canStepForward={player.canStepForward}
@@ -218,16 +222,28 @@ export function PathfindingPage() {
         onToggle={handleToggle}
         onStepBack={handleStepBack}
         onStepForward={handleStepForward}
-        onReset={() => {
-          setPlaying(false);
-          player.reset();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           player.seekTo(cursor);
         }}
-        resetLabel="Clear run"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to step 0, grid untouched',
+            onClick: () => {
+              setPlaying(false);
+              player.reset();
+            },
+          },
+          {
+            label: 'Clear grid',
+            title: 'Remove every wall and weight',
+            danger: true,
+            onClick: clearWalls,
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.workspace}>
