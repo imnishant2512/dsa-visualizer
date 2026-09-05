@@ -6,10 +6,14 @@ import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
 import { SPEED_MS } from '../../../shared/utils/randomArray';
+import { randomSeed } from '../../../shared/utils/random';
 import { PATH_ALGORITHMS, PATH_BY_ID } from '../algorithms';
 import { pathEngine } from '../engine';
+import { MAZES, generateMaze, type MazeId } from '../mazes';
+import { narratePathStep } from '../narrate';
 import { HEAVY_WEIGHT, PATH_STAT_KEYS, toIndex } from '../types';
-import { Grid } from './Grid';
+import { Narration } from '../../../shared/components/Narration';
+import { Grid, type KeyCommand } from './Grid';
 import styles from './PathfindingPage.module.css';
 
 const ROWS = 16;
@@ -39,6 +43,9 @@ export function PathfindingPage() {
   const [algorithmId, setAlgorithmId] = useState('astar');
   const [speedMs, setSpeedMs] = useState<number>(SPEED_MS.min + 14);
   const [playing, setPlaying] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
+  /** Which preset produced the current terrain, for the run bar's summary. */
+  const [terrain, setTerrain] = useState<MazeId | 'custom'>('custom');
 
   const def = PATH_BY_ID[algorithmId];
   const input = useMemo(
@@ -107,24 +114,45 @@ export function PathfindingPage() {
     [drag, applyTool, walls, start, end],
   );
 
+  /*
+   * The keyboard equivalents of the pointer tools. Painting is not the only
+   * thing the grid does — start and goal have to be placeable too, or the
+   * keyboard path can build a maze it cannot pose a question about.
+   */
+  const handleKeyCommand = useCallback(
+    (command: KeyCommand, index: number) => {
+      setPlaying(false);
+      setTerrain('custom');
+      if (command === 'apply') {
+        applyTool(index);
+        return;
+      }
+      if (command === 'start') {
+        if (index !== end && !walls[index]) setStart(index);
+        return;
+      }
+      if (command === 'end') {
+        if (index !== start && !walls[index]) setEnd(index);
+        return;
+      }
+      setTool(command);
+    },
+    [applyTool, walls, start, end],
+  );
+
   const clearWalls = () => {
     setPlaying(false);
+    setTerrain('custom');
     setWalls(new Array(SIZE).fill(false));
     setWeights(new Array(SIZE).fill(1));
   };
 
-  const randomMaze = () => {
+  const applyMaze = (id: MazeId) => {
     setPlaying(false);
-    const nextWalls = new Array(SIZE).fill(false);
-    const nextWeights = new Array(SIZE).fill(1);
-    for (let i = 0; i < SIZE; i++) {
-      if (i === start || i === end) continue;
-      const roll = Math.random();
-      if (roll < 0.24) nextWalls[i] = true;
-      else if (roll < 0.34) nextWeights[i] = HEAVY_WEIGHT;
-    }
-    setWalls(nextWalls);
-    setWeights(nextWeights);
+    const grid = generateMaze(id, { rows: ROWS, cols: COLS, start, end, seed: randomSeed() });
+    setWalls(grid.walls);
+    setWeights(grid.weights);
+    setTerrain(id);
   };
 
   const handleToggle = () => {
@@ -166,53 +194,22 @@ export function PathfindingPage() {
       <header className={styles.intro}>
         <h1>Pathfinding</h1>
         <p>
-          Drag the <strong>▶</strong> and <strong>◎</strong> markers to move start and end, or drag
-          anywhere on the grid to paint walls and heavy terrain. Editing the grid is deliberately
-          outside the replay — only a run is steppable.
+          Drag the <strong>▶</strong> and <strong>◎</strong> markers to move start and goal, or drag
+          anywhere to paint. The grid is keyboard-operable too — tab to it, then arrow keys to move
+          the cursor, space to apply, <kbd>W</kbd>/<kbd>E</kbd>/<kbd>X</kbd> to switch tool and{' '}
+          <kbd>S</kbd>/<kbd>G</kbd> to place start and goal. Editing is deliberately outside the
+          replay — only a run is steppable.
         </p>
       </header>
 
-      <div className={styles.setup}>
-        <label>
-          Algorithm
-          <select
-            value={algorithmId}
-            onChange={(e) => {
-              setPlaying(false);
-              setAlgorithmId(e.target.value);
-            }}
-          >
-            {PATH_ALGORITHMS.map((algorithm) => (
-              <option key={algorithm.id} value={algorithm.id}>
-                {algorithm.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className={styles.tools}>
-          {(['wall', 'weight', 'erase'] as Tool[]).map((option) => (
-            <button
-              key={option}
-              className={tool === option ? styles.toolActive : undefined}
-              onClick={() => setTool(option)}
-            >
-              {option === 'wall' ? 'Wall' : option === 'weight' ? `Weight ${HEAVY_WEIGHT}` : 'Erase'}
-            </button>
-          ))}
-        </div>
-
-        <button onClick={randomMaze}>Random maze</button>
-        <button onClick={clearWalls}>Clear grid</button>
-      </div>
-
-      <p className={styles.summary}>
-        {def.summary}{' '}
-        {!def.weighted && <em>Ignores terrain weights — it treats every open cell as equal.</em>}
-      </p>
-
       <RunBar
-        summary={`${def.label} · ${COLS}×${ROWS} grid`}
+        summary={`${def.label} · ${COLS}×${ROWS} · ${
+          terrain === 'custom'
+            ? 'Custom'
+            : (MAZES.find((maze) => maze.id === terrain)?.label ?? 'Custom')
+        }`}
+        onEditSetup={() => setSetupOpen((open) => !open)}
+        setupOpen={setupOpen}
         isPlaying={playing}
         canStepBack={player.canStepBack}
         canStepForward={player.canStepForward}
@@ -246,14 +243,101 @@ export function PathfindingPage() {
         stepKinds={stepKinds}
       />
 
+      {setupOpen && (
+        <div className={styles.setup}>
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>Algorithm</span>
+            <select
+              value={algorithmId}
+              onChange={(e) => {
+                setPlaying(false);
+                setAlgorithmId(e.target.value);
+              }}
+            >
+              {PATH_ALGORITHMS.map((algorithm) => (
+                <option key={algorithm.id} value={algorithm.id}>
+                  {algorithm.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/*
+            Five presets, of which noise is one. It used to be the only option,
+            and it is the least useful: uniformly scattered walls give every
+            algorithm a short, similar route and never separate them.
+          */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel} id="pathfinding-terrain-label">
+              Terrain
+            </span>
+            <div className={styles.terrain} role="group" aria-labelledby="pathfinding-terrain-label">
+              {MAZES.map((maze) => (
+                <button
+                  type="button"
+                  key={maze.id}
+                  className={`${styles.preset} ${terrain === maze.id ? styles.presetOn : ''}`}
+                  aria-pressed={terrain === maze.id}
+                  title={maze.blurb}
+                  onClick={() => applyMaze(maze.id)}
+                >
+                  {maze.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className={styles.algorithmNote}>
+            {def.summary}{' '}
+            {!def.weighted && (
+              <em>Ignores terrain weights — it treats every open cell as equal.</em>
+            )}
+          </p>
+        </div>
+      )}
+
+      <Narration
+        tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}
+      >
+        {narratePathStep(player.currentStep, state)}
+      </Narration>
+
       <div className={styles.workspace}>
         <div className={styles.left}>
-          <Grid
-            state={state}
-            onCellDown={handleCellDown}
-            onCellEnter={handleCellEnter}
-            onRelease={() => setDrag(null)}
-          />
+          {/*
+            The tool rail sits against the canvas rather than in a settings row
+            above it, so the control and the thing it acts on are one object.
+          */}
+          <div className={styles.canvas}>
+            <div className={styles.rail} role="group" aria-label="Drawing tool">
+              {(['wall', 'weight', 'erase'] as Tool[]).map((option) => (
+                <button
+                  type="button"
+                  key={option}
+                  className={`${styles.railButton} ${tool === option ? styles.railActive : ''}`}
+                  aria-pressed={tool === option}
+                  onClick={() => setTool(option)}
+                  title={
+                    option === 'wall'
+                      ? 'Wall — impassable (W)'
+                      : option === 'weight'
+                        ? `Heavy terrain, cost ${HEAVY_WEIGHT} (E)`
+                        : 'Erase back to open ground (X)'
+                  }
+                >
+                  {option === 'wall' ? 'Wall' : option === 'weight' ? `×${HEAVY_WEIGHT}` : 'Erase'}
+                </button>
+              ))}
+            </div>
+
+            <Grid
+              state={state}
+              onCellDown={handleCellDown}
+              onCellEnter={handleCellEnter}
+              onRelease={() => setDrag(null)}
+              onKeyCommand={handleKeyCommand}
+            />
+          </div>
           {outcome && (
             <div className={state.found ? styles.found : styles.missing}>{outcome}</div>
           )}

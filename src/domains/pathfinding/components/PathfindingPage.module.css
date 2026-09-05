@@ -125,3 +125,114 @@
   border-radius: 2px;
   display: inline-block;
 }
+
+.setup {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 20px 0;
+  border-bottom: 2px solid var(--rule);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.terrain {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.preset {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  background: none;
+  color: var(--text-muted);
+  border: 2px solid var(--border-strong);
+  margin: 0 0 -2px -2px;
+}
+
+.preset:first-child {
+  margin-left: 0;
+}
+
+.preset:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.presetOn,
+.presetOn:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+
+.algorithmNote {
+  flex: 1 1 100%;
+  margin: 0;
+  max-width: 80ch;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* The rail is part of the canvas, not a settings row somewhere above it. */
+.canvas {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+.railButton {
+  /* 44px minimum hit target, in both directions. */
+  min-width: 56px;
+  min-height: 44px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  color: var(--text-muted);
+  border: 2px solid var(--border-strong);
+  margin-bottom: -2px;
+}
+
+.railButton:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.railActive,
+.railActive:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  position: relative;
+  z-index: 1;
+}
