@@ -4,47 +4,181 @@
   gap: 16px;
 }
 
-.intro h1 {
-  font-size: 22px;
-  margin-bottom: 4px;
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 20px 0 14px;
+}
+
+.introText {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .intro p {
   margin: 0;
-  max-width: 70ch;
+  max-width: 52ch;
+  font-size: 13px;
   color: var(--text-muted);
 }
 
-.setup {
+/* One bordered block split by a hairline, not two cards. */
+.headStats {
+  flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding: 14px 16px;
-  background: var(--bg-raised);
-  border-bottom: 1px solid var(--hairline);
+  border: 2px solid var(--rule);
 }
 
-.setup label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
+.headStat {
+  padding: 14px 20px;
+}
+
+.headStat + .headStat {
+  border-left: 1px solid var(--hairline);
+}
+
+.headValue {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.headLabel {
+  margin-top: 5px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-faint);
 }
 
-.readout {
-  font-family: var(--mono);
-  color: var(--text);
-  min-width: 28px;
-}
-
-.toggle {
-  margin-left: auto;
+.raceToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.raceToggle input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.setup {
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 20px 0;
+  border-bottom: 2px solid var(--rule);
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.sizeField {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sizeField input {
+  width: 100%;
+  height: 24px;
+  margin: 0;
+}
+
+.shapeField {
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shapes {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.shape {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  background: none;
+  color: var(--text-muted);
+  border: 2px solid var(--border-strong);
+  /* Collapses the shared edge so the row reads as one control. */
+  margin: 0 0 -2px -2px;
+}
+
+.shape:first-child {
+  margin-left: 0;
+}
+
+.shape:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.shapeOn,
+.shapeOn:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+
+.setupActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.newArray {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 11px 16px;
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.newArray:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text);
 }
 
 .single {

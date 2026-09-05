@@ -36,7 +36,16 @@ const ROLE_PHRASE: Record<string, string> = {
   bucket: 'the current bucket',
 };
 
+/**
+ * Names the indices, or counts them.
+ *
+ * Several algorithms mark the whole array sorted in one final step, and
+ * spelling out "a[0] and a[1] and ... and a[44]" produced a four-line
+ * paragraph in a live region — which a screen reader then read out in full,
+ * one index at a time, as the last thing it said about the run.
+ */
 function list(indices: number[]): string {
+  if (indices.length > 3) return `${indices.length} elements`;
   return indices.map((i) => `a[${i}]`).join(' and ');
 }
 

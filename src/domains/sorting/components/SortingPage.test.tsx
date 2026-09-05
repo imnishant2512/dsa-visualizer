@@ -25,11 +25,28 @@ const stepBack = () => screen.getByRole('button', { name: 'Step back' });
 
 /**
  * Setup is collapsed behind a one-line summary in the run bar, so anything
- * reaching for size, shape or race mode has to open it first.
+ * reaching for size or shape has to open it first.
  */
 function openSetup() {
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 }
+
+/**
+ * Choosing an algorithm is a chip in the family picker, not a <select>. The
+ * page carries one identity strip; the per-panel dropdowns only exist in race
+ * mode, where two algorithms are loaded at once.
+ */
+function pickAlgorithm(label: string) {
+  fireEvent.click(screen.getByRole('button', { name: /^Change — / }));
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${label}`) }));
+}
+
+/**
+ * The name in the identity strip — what is loaded right now. Scoped to the
+ * strip, since the pseudocode panel also has a `.title`.
+ */
+const loadedAlgorithm = () =>
+  document.querySelector('[class*="identity"] [class*="title"]')?.textContent;
 
 /** Sliders in DOM order: the run bar's scrub, then size once setup is open. */
 const scrubSlider = () => screen.getAllByRole('slider')[0];
@@ -58,13 +75,13 @@ describe('SortingPage', () => {
   it('restores algorithm, size and shape from the URL', () => {
     renderPage('?algo=merge&size=20&shape=reversed&seed=42');
 
-    expect(screen.getByDisplayValue('Merge Sort')).toBeDefined();
+    expect(loadedAlgorithm()).toBe('Merge Sort');
     // The summary states the whole configuration without opening anything.
     expect(screen.getByText('Merge Sort · 20 · Reversed · seed 42')).toBeDefined();
 
     openSetup();
-    expect(screen.getByText('20')).toBeDefined();
-    expect(screen.getByDisplayValue('Reversed')).toBeDefined();
+    expect(sizeSlider().getAttribute('value')).toBe('20');
+    expect(screen.getByRole('button', { name: 'Reversed', pressed: true })).toBeDefined();
   });
 
   it('reproduces the identical array for the same seed', () => {
@@ -91,13 +108,15 @@ describe('SortingPage', () => {
   it('clamps the array when an algorithm with a size ceiling is picked', () => {
     renderPage('?algo=quick&size=45&shape=random&seed=3');
     openSetup();
-    expect(screen.getByText('45')).toBeDefined();
+    expect(sizeSlider().getAttribute('value')).toBe('45');
 
     // Bogo sort caps the array at 6 rather than freezing the tab.
-    fireEvent.change(screen.getByDisplayValue('Quick Sort'), { target: { value: 'bogo' } });
+    pickAlgorithm('Bogo Sort');
 
-    expect(screen.getByText('6')).toBeDefined();
+    expect(sizeSlider().getAttribute('value')).toBe('6');
     expect(sizeSlider().getAttribute('max')).toBe('6');
+    // And says so, rather than silently moving the slider under the reader.
+    expect(screen.getByText(/capped at 6 elements/)).toBeDefined();
   });
 
   it('releases the ceiling when a normal algorithm is picked again', () => {
@@ -105,8 +124,9 @@ describe('SortingPage', () => {
     openSetup();
     expect(sizeSlider().getAttribute('max')).toBe('6');
 
-    fireEvent.change(screen.getByDisplayValue('Bogo Sort'), { target: { value: 'insertion' } });
+    pickAlgorithm('Insertion Sort');
     expect(sizeSlider().getAttribute('max')).toBe('150');
+    expect(screen.queryByText(/capped at/)).toBeNull();
   });
 
   it('steps forward and back, and back arrives at an untouched frame', () => {
@@ -143,11 +163,59 @@ describe('SortingPage', () => {
     renderPage('?algo=quick&size=15&shape=random&seed=2');
     expect(screen.getAllByText('Comparisons')).toHaveLength(1);
 
-    openSetup();
-    fireEvent.click(screen.getByLabelText(/Race two algorithms/));
+    // The race toggle names the loaded algorithm, so it says what it will race.
+    fireEvent.click(screen.getByLabelText(/Race Quick Sort against another/));
     expect(screen.getAllByText('Comparisons')).toHaveLength(2);
     expect(screen.getByDisplayValue('Quick Sort')).toBeDefined();
     expect(screen.getByDisplayValue('Merge Sort')).toBeDefined();
+  });
+
+  /** Jumps the cursor to the last step without waiting out the playback clock. */
+  function seekToEnd() {
+    const slider = scrubSlider();
+    fireEvent.change(slider, { target: { value: slider.getAttribute('max') } });
+  }
+
+  it('holds the measured count against the predicted bound once the run ends', () => {
+    renderPage('?algo=selection&size=12&shape=random&seed=5');
+    expect(screen.getByText(/Run to the end to compare/)).toBeDefined();
+
+    seekToEnd();
+
+    /*
+     * Selection sort is the one algorithm whose comparison count is exactly
+     * its bound and completely input-independent — it always scans the whole
+     * unsorted remainder. n(n-1)/2 at n=12 is 66, on any seed and any shape,
+     * so this pins the arithmetic rather than approximating it.
+     */
+    expect(screen.getByText(/Matches the predicted bound — 66 comparisons against 66\./)).toBeDefined();
+  });
+
+  it('compares a non-comparison sort against array accesses, not comparisons', () => {
+    /*
+     * The regression this guards: counting sort performs no comparisons at
+     * all, so measuring it against a predicted *comparison* count reported
+     * "100% fewer than predicted" on every run — true, and worthless.
+     */
+    renderPage('?algo=counting&size=12&shape=random&seed=5');
+    seekToEnd();
+
+    expect(screen.getByText(/array accesses against/)).toBeDefined();
+    expect(screen.queryByText(/fewer comparisons than predicted/)).toBeNull();
+  });
+
+  it('names only the step kinds the chosen algorithm actually emits', () => {
+    // Counting sort never swaps and never reads into a buffer, so advertising
+    // those states in the legend describes an algorithm that is not running.
+    renderPage('?algo=counting&size=12&shape=random&seed=5');
+    expect(screen.queryByText('Swapping')).toBeNull();
+    expect(screen.queryByText('Reading into buffer')).toBeNull();
+    expect(screen.getByText('Bucketing')).toBeDefined();
+
+    cleanup();
+    renderPage('?algo=bubble&size=12&shape=random&seed=5');
+    expect(screen.getByText('Swapping')).toBeDefined();
+    expect(screen.queryByText('Bucketing')).toBeNull();
   });
 
   it('disables scrubbing in race mode and explains why', () => {

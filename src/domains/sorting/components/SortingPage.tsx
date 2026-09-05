@@ -14,10 +14,12 @@ import {
   makeArray,
   type ArrayShape,
 } from '../../../shared/utils/randomArray';
+import { KIND_LABEL, type VisualKind } from '../../../shared/components/stepKinds';
 import { sortEngine } from '../engine';
 import { narrateSortStep, sortVisualKind } from '../narrate';
 import { MAX_SIZE_BY_ID, SORT_BY_ID, SORT_ALGORITHMS } from '../registry';
 import { SORT_STAT_KEYS } from '../types';
+import { AlgorithmStrip } from './AlgorithmStrip';
 import { SortPanel } from './SortPanel';
 import styles from './SortingPage.module.css';
 
@@ -51,6 +53,7 @@ export function SortingPage() {
   // Purely presentational: the run bar carries a one-line summary, and this is
   // whether the controls behind that summary are showing.
   const [setupOpen, setSetupOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const baseArray = useMemo(() => makeArray(shape, size, seed), [shape, size, seed]);
 
@@ -114,6 +117,7 @@ export function SortingPage() {
   /** Selecting an algorithm can tighten the size ceiling, so re-clamp here. */
   const selectAlgorithm = (panel: 'a' | 'b', id: string) => {
     setPlaying(false);
+    setPickerOpen(false);
     if (panel === 'a') setIdA(id);
     else setIdB(id);
 
@@ -164,15 +168,67 @@ export function SortingPage() {
   const shapeLabel = ARRAY_SHAPES.find((option) => option.id === shape)?.label ?? 'Random';
   const stepKinds = useMemo(() => playerA.steps.map(sortVisualKind), [playerA.steps]);
 
+  /*
+   * The legend named all seven states on every algorithm, so counting sort —
+   * which never swaps and never reads into a buffer — advertised four states
+   * it cannot produce. Derived from the run itself, it now describes only what
+   * this algorithm on this input actually emits.
+   */
+  const emittedKinds = useMemo(() => {
+    const kinds = new Set<VisualKind>();
+    for (const kind of stepKinds) if (kind !== 'idle') kinds.add(kind);
+    return kinds;
+  }, [stepKinds]);
+
+  const capNote =
+    MAX_SIZE_BY_ID[idA] !== undefined
+      ? `${defA.label} is capped at ${MAX_SIZE_BY_ID[idA]} elements — its runtime is unbounded, so a larger array would not finish.`
+      : null;
+
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
-        <h1>Sorting</h1>
-        <p>
-          Seventeen sorting algorithms over one replayable engine. Step forward and back through
-          every comparison and write, or race two algorithms against the same array.
-        </p>
+        <div className={styles.introText}>
+          <h1>Sorting</h1>
+          <p>
+            Seventeen algorithms, one reversible run — every comparison is a step you can walk
+            backwards.
+          </p>
+        </div>
+        {/* Two facts that frame everything below: how long this run is, and
+            how big the input is. Both change the moment setup changes. */}
+        <div className={styles.headStats}>
+          <div className={styles.headStat}>
+            <div className={styles.headValue}>{playerA.totalSteps.toLocaleString()}</div>
+            <div className={styles.headLabel}>Steps in this run</div>
+          </div>
+          <div className={styles.headStat}>
+            <div className={styles.headValue}>{size}</div>
+            <div className={styles.headLabel}>Elements</div>
+          </div>
+        </div>
       </header>
+
+      <AlgorithmStrip
+        def={defA}
+        open={pickerOpen}
+        onToggle={() => setPickerOpen((open) => !open)}
+        onSelect={(id) => selectAlgorithm('a', id)}
+        capNote={capNote}
+        action={
+          <label className={styles.raceToggle}>
+            <input
+              type="checkbox"
+              checked={raceMode}
+              onChange={(e) => {
+                setPlaying(false);
+                setRaceMode(e.target.checked);
+              }}
+            />
+            Race {defA.label} against another
+          </label>
+        }
+      />
 
       <RunBar
         summary={`${defA.label} · ${size} · ${shapeLabel} · seed ${seed}`}
@@ -214,8 +270,8 @@ export function SortingPage() {
 
       {setupOpen && (
         <div className={styles.setup}>
-          <label>
-            Size
+          <label className={styles.sizeField}>
+            <span className={styles.fieldLabel}>Size — {size}</span>
             <input
               type="range"
               min={ARRAY_SIZE.min}
@@ -227,40 +283,38 @@ export function SortingPage() {
                 regenerate(shape, next);
               }}
             />
-            <span className={styles.readout}>{size}</span>
           </label>
 
-          <label>
-            Shape
-            <select
-              value={shape}
-              onChange={(e) => {
-                const next = e.target.value as ArrayShape;
-                setShape(next);
-                regenerate(next, size);
-              }}
-            >
+          {/*
+            Shapes as a segmented row rather than a <select>: there are four of
+            them, they are the thing you change most while comparing
+            algorithms, and a dropdown hides three of the four behind a click.
+          */}
+          <div className={styles.shapeField}>
+            <span className={styles.fieldLabel} id="sorting-shape-label">
+              Input shape
+            </span>
+            <div className={styles.shapes} role="group" aria-labelledby="sorting-shape-label">
               {ARRAY_SHAPES.map((option) => (
-                <option key={option.id} value={option.id}>
+                <button
+                  type="button"
+                  key={option.id}
+                  className={`${styles.shape} ${shape === option.id ? styles.shapeOn : ''}`}
+                  aria-pressed={shape === option.id}
+                  onClick={() => regenerate(option.id, size)}
+                >
                   {option.label}
-                </option>
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          </div>
 
-          <ShareLink />
-
-          <label className={styles.toggle}>
-            <input
-              type="checkbox"
-              checked={raceMode}
-              onChange={(e) => {
-                setPlaying(false);
-                setRaceMode(e.target.checked);
-              }}
-            />
-            Race two algorithms
-          </label>
+          <div className={styles.setupActions}>
+            <button className={styles.newArray} onClick={() => regenerate(shape, size)}>
+              New array
+            </button>
+            <ShareLink />
+          </div>
         </div>
       )}
 
@@ -274,9 +328,10 @@ export function SortingPage() {
           frame={playerA.frame}
           currentStep={playerA.currentStep}
           maxValue={maxValue}
+          size={size}
           onAlgorithmChange={(id) => selectAlgorithm('a', id)}
           compact={raceMode}
-          finished={raceMode && !playerA.canStepForward}
+          finished={!playerA.canStepForward}
         />
 
         {raceMode && (
@@ -285,6 +340,7 @@ export function SortingPage() {
             frame={playerB.frame}
             currentStep={playerB.currentStep}
             maxValue={maxValue}
+            size={size}
             onAlgorithmChange={(id) => selectAlgorithm('b', id)}
             compact
             finished={!playerB.canStepForward}
@@ -293,17 +349,28 @@ export function SortingPage() {
       </div>
 
       <footer className={styles.legend}>
+        {LEGEND_ORDER.filter((kind) => emittedKinds.has(kind)).map((kind) => (
+          <Legend key={kind} swatch={kind} label={LEGEND_LABEL[kind]} />
+        ))}
         <Legend swatch="idle" label="Untouched" />
-        <Legend swatch="compare" label="Comparing" />
-        <Legend swatch="swap" label="Swapping" />
-        <Legend swatch="write" label="Writing" />
-        <Legend swatch="read" label="Reading" />
-        <Legend swatch="bucket" label="Bucketing" />
-        <Legend swatch="sorted" label="In final position" />
       </footer>
     </div>
   );
 }
+
+/** Fixed order, so the legend does not reshuffle when the algorithm changes. */
+const LEGEND_ORDER: VisualKind[] = ['compare', 'swap', 'write', 'read', 'bucket', 'sorted'];
+
+/** Longer than the run bar's tag, which has to fit in a 9px-padded chip. */
+const LEGEND_LABEL: Record<string, string> = {
+  ...KIND_LABEL,
+  compare: 'Comparing',
+  swap: 'Swapping',
+  write: 'Writing',
+  read: 'Reading into buffer',
+  bucket: 'Bucketing',
+  sorted: 'In final position',
+};
 
 function Legend({ swatch, label }: { swatch: string; label: string }) {
   return (
