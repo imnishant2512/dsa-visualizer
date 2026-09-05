@@ -3,9 +3,10 @@ import { buildSteps, initFrame, seek, stepBack, stepForward, stepForwardBy } fro
 import type { AlgorithmDefinition, Frame, StepEngine } from './types';
 import { usePlaybackTicker } from './usePlaybackTicker';
 
-export interface UseStepPlayerArgs<TInput, TState, TStep> {
-  def: AlgorithmDefinition<TInput, TState, TStep>;
-  input: TInput;
+export interface UseStepCursorArgs<TState, TStep> {
+  /** Already drained. Must be a stable reference — identity resets the cursor. */
+  steps: readonly TStep[];
+  initialState: TState;
   /** Must be a stable reference (module-level const per domain). */
   engine: StepEngine<TState, TStep>;
   statKeys: readonly string[];
@@ -18,6 +19,12 @@ export interface UseStepPlayerArgs<TInput, TState, TStep> {
   playing: boolean;
   /** Fired while `playing` once this player has no steps left. */
   onFinished?: () => void;
+}
+
+export interface UseStepPlayerArgs<TInput, TState, TStep>
+  extends Omit<UseStepCursorArgs<TState, TStep>, 'steps' | 'initialState'> {
+  def: AlgorithmDefinition<TInput, TState, TStep>;
+  input: TInput;
 }
 
 export interface StepPlayer<TState, TStep> {
@@ -35,21 +42,24 @@ export interface StepPlayer<TState, TStep> {
 }
 
 /**
- * Batch-mode player: builds the full step list once per (def, input) and walks
- * a cursor through it. Pause is just not ticking, step-back is one invertStep,
- * and a speed change re-arms the interval without disturbing the cursor.
+ * Walks a cursor through a step list that someone else already built.
+ *
+ * Split out from `useStepPlayer` because race mode has to know how long both
+ * runs are *before* it can decide how fast to play either — the two are paced
+ * against each other. With generation folded into the player there was no
+ * point at which a caller could see one length without having started the
+ * other player, and building the lists twice to find out would have doubled
+ * the work on every input change.
  */
-export function useStepPlayer<TInput, TState, TStep>({
-  def,
-  input,
+export function useStepCursor<TState, TStep>({
+  steps,
+  initialState,
   engine,
   statKeys,
   speedMs,
   playing,
   onFinished,
-}: UseStepPlayerArgs<TInput, TState, TStep>): StepPlayer<TState, TStep> {
-  const { steps, initialState } = useMemo(() => buildSteps(def, input), [def, input]);
-
+}: UseStepCursorArgs<TState, TStep>): StepPlayer<TState, TStep> {
   const [frame, setFrame] = useState<Frame<TState>>(() =>
     initFrame(initialState, statKeys, steps.length),
   );
@@ -112,4 +122,18 @@ export function useStepPlayer<TInput, TState, TStep>({
     reset,
     seekTo,
   };
+}
+
+/**
+ * Batch-mode player: builds the full step list once per (def, input) and walks
+ * a cursor through it. Pause is just not ticking, step-back is one invertStep,
+ * and a speed change re-arms the interval without disturbing the cursor.
+ */
+export function useStepPlayer<TInput, TState, TStep>({
+  def,
+  input,
+  ...rest
+}: UseStepPlayerArgs<TInput, TState, TStep>): StepPlayer<TState, TStep> {
+  const { steps, initialState } = useMemo(() => buildSteps(def, input), [def, input]);
+  return useStepCursor({ steps, initialState, ...rest });
 }

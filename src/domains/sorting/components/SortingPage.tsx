@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useStepPlayer } from '../../../engine/useStepPlayer';
+import { buildSteps } from '../../../engine/player';
+import { useStepCursor } from '../../../engine/useStepPlayer';
 import { Narration } from '../../../shared/components/Narration';
 import { RunBar } from '../../../shared/components/RunBar';
 import { ShareLink } from '../../../shared/components/ShareLink';
@@ -20,6 +21,7 @@ import { narrateSortStep, sortVisualKind } from '../narrate';
 import { MAX_SIZE_BY_ID, SORT_BY_ID, SORT_ALGORITHMS } from '../registry';
 import { SORT_STAT_KEYS } from '../types';
 import { AlgorithmStrip } from './AlgorithmStrip';
+import { RaceView } from './RaceView';
 import { SortPanel } from './SortPanel';
 import styles from './SortingPage.module.css';
 
@@ -28,6 +30,9 @@ function readInt(value: string | null): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
+
+/** Stable identity, so panel B's memo does not rebuild while race mode is off. */
+const EMPTY_INPUT = { values: [] as number[] };
 
 function readAlgorithm(value: string | null): string | null {
   return value && SORT_ALGORITHMS.some((a) => a.id === value) ? value : null;
@@ -62,21 +67,52 @@ export function SortingPage() {
   const input = useMemo(() => ({ values: baseArray }), [baseArray]);
   const maxValue = useMemo(() => Math.max(1, ...baseArray), [baseArray]);
 
-  const playerA = useStepPlayer({
-    def: SORT_BY_ID[idA],
-    input,
+  const defA = SORT_BY_ID[idA];
+  const defB = SORT_BY_ID[idB];
+
+  const runA = useMemo(() => buildSteps(defA, input), [defA, input]);
+  /*
+   * Generated against an empty array unless race mode is on. Panel B used to
+   * build its full step list on every input change whether or not anyone could
+   * see it — a second 22,000-step bubble sort on each keystroke of the size
+   * slider.
+   */
+  const runB = useMemo(
+    () => buildSteps(defB, raceMode ? input : EMPTY_INPUT),
+    [defB, input, raceMode],
+  );
+
+  /*
+   * One clock for both runs.
+   *
+   * Two players ticking at the same ms-per-step means the shorter run finishes
+   * first and then sits there while the other keeps going, which makes the
+   * comparison a stopwatch on step *count* — a number already printed above
+   * each chart. Pacing both to the longer run's length instead means they
+   * advance through the same percentage of themselves at the same moment, so
+   * anything visibly different between the two charts is a real difference in
+   * how the algorithms behave rather than in how many steps they emit.
+   *
+   * The speed control keeps meaning what it says for the longer run; the
+   * shorter one is stretched to match it.
+   */
+  const raceLength = raceMode ? Math.max(runA.steps.length, runB.steps.length) : 0;
+  const paceFor = (length: number) =>
+    raceMode && length > 0 ? speedMs * (raceLength / length) : speedMs;
+
+  const playerA = useStepCursor({
+    ...runA,
     engine: sortEngine,
     statKeys: SORT_STAT_KEYS,
-    speedMs,
+    speedMs: paceFor(runA.steps.length),
     playing,
   });
 
-  const playerB = useStepPlayer({
-    def: SORT_BY_ID[idB],
-    input,
+  const playerB = useStepCursor({
+    ...runB,
     engine: sortEngine,
     statKeys: SORT_STAT_KEYS,
-    speedMs,
+    speedMs: paceFor(runB.steps.length),
     playing: playing && raceMode,
   });
 
@@ -140,16 +176,40 @@ export function SortingPage() {
     setPlaying(true);
   };
 
+  /*
+   * Race mode's cursor is a position in the longer run; the shorter run is
+   * seeked to the same fraction of itself. Stepping "one step" therefore means
+   * one step of the longer run and however much of the shorter one that is
+   * worth — which is the only reading under which the two stay level.
+   */
+  const raceSeek = (leadCursor: number) => {
+    const lead = Math.max(-1, Math.min(leadCursor, raceLength - 1));
+    const fraction = raceLength > 0 ? (lead + 1) / raceLength : 0;
+    const toCursor = (length: number) => Math.round(fraction * length) - 1;
+    playerA.seekTo(runA.steps.length === raceLength ? lead : toCursor(runA.steps.length));
+    playerB.seekTo(runB.steps.length === raceLength ? lead : toCursor(runB.steps.length));
+  };
+
+  /** Where the shared cursor sits: always the longer run's own position. */
+  const raceCursor =
+    runA.steps.length >= runB.steps.length ? playerA.frame.cursor : playerB.frame.cursor;
+
   const handleStepForward = () => {
     setPlaying(false);
+    if (raceMode) {
+      raceSeek(raceCursor + 1);
+      return;
+    }
     playerA.next();
-    if (raceMode) playerB.next();
   };
 
   const handleStepBack = () => {
     setPlaying(false);
+    if (raceMode) {
+      raceSeek(raceCursor - 1);
+      return;
+    }
     playerA.prev();
-    if (raceMode) playerB.prev();
   };
 
   const handleRewind = () => {
@@ -164,9 +224,10 @@ export function SortingPage() {
     onStepForward: handleStepForward,
   });
 
-  const defA = SORT_BY_ID[idA];
   const shapeLabel = ARRAY_SHAPES.find((option) => option.id === shape)?.label ?? 'Random';
   const stepKinds = useMemo(() => playerA.steps.map(sortVisualKind), [playerA.steps]);
+  const stepKindsB = useMemo(() => playerB.steps.map(sortVisualKind), [playerB.steps]);
+  const raceStepKinds = runA.steps.length >= runB.steps.length ? stepKinds : stepKindsB;
 
   /*
    * The legend named all seven states on every algorithm, so counting sort —
@@ -179,6 +240,24 @@ export function SortingPage() {
     for (const kind of stepKinds) if (kind !== 'idle') kinds.add(kind);
     return kinds;
   }, [stepKinds]);
+
+  /*
+   * The race's own sentence. "Who won" is not the step count — a run that
+   * emits fewer steps can still touch the array more — so it is settled on
+   * array accesses, and the step counts are reported alongside rather than
+   * standing in for the result.
+   */
+  const racePct = raceLength > 0 ? (raceCursor + 1) / raceLength : 0;
+  const accessDiff = (playerA.frame.stats.accesses ?? 0) - (playerB.frame.stats.accesses ?? 0);
+  const raceFinished = !playerA.canStepForward && !playerB.canStepForward;
+  const raceVerdict =
+    raceCursor < 0
+      ? 'Press play — both runs advance at the same percentage of their own length.'
+      : raceFinished
+        ? accessDiff === 0
+          ? `Dead heat: ${defA.label} and ${defB.label} touched the array the same number of times.`
+          : `${accessDiff > 0 ? defB.label : defA.label} won on array accesses by ${Math.abs(accessDiff).toLocaleString()} — ${defA.label} took ${runA.steps.length.toLocaleString()} steps, ${defB.label} took ${runB.steps.length.toLocaleString()}.`
+        : `${defA.label} is ${(playerA.frame.stats.comparisons ?? 0).toLocaleString()} comparisons in; ${defB.label} is ${(playerB.frame.stats.comparisons ?? 0).toLocaleString()}.`;
 
   const capNote =
     MAX_SIZE_BY_ID[idA] !== undefined
@@ -235,25 +314,29 @@ export function SortingPage() {
         onEditSetup={() => setSetupOpen((open) => !open)}
         setupOpen={setupOpen}
         isPlaying={playing}
-        canStepBack={playerA.canStepBack || (raceMode && playerB.canStepBack)}
-        canStepForward={playerA.canStepForward || (raceMode && playerB.canStepForward)}
-        cursor={playerA.frame.cursor}
-        totalSteps={playerA.totalSteps}
+        canStepBack={raceMode ? raceCursor >= 0 : playerA.canStepBack}
+        canStepForward={
+          raceMode ? raceCursor < raceLength - 1 : playerA.canStepForward
+        }
+        cursor={raceMode ? raceCursor : playerA.frame.cursor}
+        totalSteps={raceMode ? raceLength : playerA.totalSteps}
         speedMs={speedMs}
         onToggle={handleToggle}
         onStepBack={handleStepBack}
         onStepForward={handleStepForward}
         onSpeedChange={setSpeedMs}
-        // Scrubbing two runs of different lengths to one cursor is meaningless.
-        onSeek={
-          raceMode
-            ? undefined
-            : (cursor) => {
-                setPlaying(false);
-                playerA.seekTo(cursor);
-              }
-        }
-        seekDisabledReason="Scrubbing is off in race mode — the two runs have different lengths, so one cursor cannot mean the same thing for both."
+        /*
+         * Scrubbing works in race mode too. It was disabled on the grounds
+         * that one cursor cannot mean the same thing for two runs of
+         * different lengths — true of a raw step index, but the shared clock
+         * already answers it: the cursor is a fraction of each run, and both
+         * are seeked to it.
+         */
+        onSeek={(cursor) => {
+          setPlaying(false);
+          if (raceMode) raceSeek(cursor);
+          else playerA.seekTo(cursor);
+        }}
         resets={[
           { label: 'Rewind', onClick: handleRewind, title: 'Back to step 0, same array' },
           {
@@ -263,9 +346,9 @@ export function SortingPage() {
             title: 'Discard this run and generate a fresh array',
           },
         ]}
-        // The tick strip is painted from panel A; in race mode the two runs
-        // have different lengths, so one strip cannot describe both.
-        stepKinds={raceMode ? undefined : stepKinds}
+        // Painted from whichever run the shared cursor tracks, so the strip
+        // and the slider are in the same coordinate space.
+        stepKinds={raceMode ? raceStepKinds : stepKinds}
       />
 
       {setupOpen && (
@@ -318,11 +401,24 @@ export function SortingPage() {
         </div>
       )}
 
-      <Narration tag={playerA.frame.cursor >= 0 ? `Step ${playerA.frame.cursor + 1}` : 'Ready'}>
-        {narrateSortStep(playerA.currentStep, playerA.frame.state)}
-      </Narration>
+      {raceMode ? (
+        <Narration tag={`${Math.round(racePct * 100)}%`}>{raceVerdict}</Narration>
+      ) : (
+        <Narration tag={playerA.frame.cursor >= 0 ? `Step ${playerA.frame.cursor + 1}` : 'Ready'}>
+          {narrateSortStep(playerA.currentStep, playerA.frame.state)}
+        </Narration>
+      )}
 
-      <div className={raceMode ? styles.race : styles.single}>
+      {raceMode ? (
+        <RaceView
+          defA={defA}
+          defB={defB}
+          playerA={playerA}
+          playerB={playerB}
+          maxValue={maxValue}
+          onSelect={selectAlgorithm}
+        />
+      ) : (
         <SortPanel
           def={defA}
           frame={playerA.frame}
@@ -330,23 +426,9 @@ export function SortingPage() {
           maxValue={maxValue}
           size={size}
           onAlgorithmChange={(id) => selectAlgorithm('a', id)}
-          compact={raceMode}
           finished={!playerA.canStepForward}
         />
-
-        {raceMode && (
-          <SortPanel
-            def={SORT_BY_ID[idB]}
-            frame={playerB.frame}
-            currentStep={playerB.currentStep}
-            maxValue={maxValue}
-            size={size}
-            onAlgorithmChange={(id) => selectAlgorithm('b', id)}
-            compact
-            finished={!playerB.canStepForward}
-          />
-        )}
-      </div>
+      )}
 
       <footer className={styles.legend}>
         {LEGEND_ORDER.filter((kind) => emittedKinds.has(kind)).map((kind) => (

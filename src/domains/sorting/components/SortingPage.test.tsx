@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SortingPage } from './SortingPage';
@@ -72,6 +72,12 @@ function counter(cursor: number): HTMLElement {
 afterEach(cleanup);
 
 describe('SortingPage', () => {
+  /** Jumps the cursor to the last step without waiting out the playback clock. */
+  function seekToEnd() {
+    const slider = scrubSlider();
+    fireEvent.change(slider, { target: { value: slider.getAttribute('max') } });
+  }
+
   it('restores algorithm, size and shape from the URL', () => {
     renderPage('?algo=merge&size=20&shape=reversed&seed=42');
 
@@ -146,6 +152,14 @@ describe('SortingPage', () => {
   it('plays to the end and stops on its own', async () => {
     renderPage('?algo=bubble&size=8&shape=random&seed=11');
 
+    /*
+     * At the default 60ms a step, this run is about 90 steps and therefore
+     * about 5.4 seconds of real time — over the 5s default timeout, so the
+     * test failed whenever the machine was busy. The 4x preset is the same
+     * playback path at 12ms a step.
+     */
+    fireEvent.click(screen.getByRole('button', { name: '4×' }));
+
     fireEvent.click(playButton());
     await waitFor(() => expect(stepForward().hasAttribute('disabled')).toBe(true), {
       timeout: 5000,
@@ -159,22 +173,22 @@ describe('SortingPage', () => {
     expect(playButton().hasAttribute('disabled')).toBe(false);
   });
 
-  it('shows one panel normally and two in race mode, each with its own stats', () => {
+  it('replaces the single panel with a delta strip in race mode', () => {
     renderPage('?algo=quick&size=15&shape=random&seed=2');
     expect(screen.getAllByText('Comparisons')).toHaveLength(1);
+    expect(screen.queryByText(/^Delta — /)).toBeNull();
 
     // The race toggle names the loaded algorithm, so it says what it will race.
     fireEvent.click(screen.getByLabelText(/Race Quick Sort against another/));
-    expect(screen.getAllByText('Comparisons')).toHaveLength(2);
-    expect(screen.getByDisplayValue('Quick Sort')).toBeDefined();
-    expect(screen.getByDisplayValue('Merge Sort')).toBeDefined();
-  });
 
-  /** Jumps the cursor to the last step without waiting out the playback clock. */
-  function seekToEnd() {
-    const slider = scrubSlider();
-    fireEvent.change(slider, { target: { value: slider.getAttribute('max') } });
-  }
+    /*
+     * Two stats boxes side by side left the reader subtracting one column from
+     * the other. There is now one strip that does the subtracting.
+     */
+    expect(screen.getByText(/^Delta — /)).toBeDefined();
+    expect(screen.getByLabelText('Algorithm in slot A')).toBeDefined();
+    expect(screen.getByLabelText('Algorithm in slot B')).toBeDefined();
+  });
 
   it('holds the measured count against the predicted bound once the run ends', () => {
     renderPage('?algo=selection&size=12&shape=random&seed=5');
@@ -218,25 +232,44 @@ describe('SortingPage', () => {
     expect(screen.queryByText('Bucketing')).toBeNull();
   });
 
-  it('disables scrubbing in race mode and explains why', () => {
+  /** Each side's own "n / total steps" readout, as [done, total] pairs. */
+  function sideProgress(): Array<[number, number]> {
+    return screen.getAllByText(/^[\d,]+ \/ [\d,]+ steps$/).map((element) => {
+      const [done, total] = (element.textContent ?? '').replace(/,|steps/g, '').split('/');
+      return [Number(done), Number(total)];
+    });
+  }
+
+  it('scrubs in race mode, which the old bar refused to do', () => {
+    /*
+     * Scrubbing was disabled on the grounds that one cursor cannot mean the
+     * same thing for two runs of different lengths. The shared clock answers
+     * that: the cursor is a fraction, and both runs are seeked to it.
+     */
     renderPage('?algo=quick&size=15&shape=random&seed=2&vs=merge');
-    expect(scrubSlider().hasAttribute('disabled')).toBe(true);
+    expect(scrubSlider().hasAttribute('disabled')).toBe(false);
   });
 
-  it('advances both race panels together when stepping', () => {
-    renderPage('?algo=bubble&size=12&shape=random&seed=4&vs=selection');
+  it('keeps both runs level at the same percentage of their own length', () => {
+    // Bubble and merge differ by roughly an order of magnitude at this size,
+    // which is what makes a shared step index useless and a shared fraction
+    // the only thing the two can agree on.
+    renderPage('?algo=bubble&size=20&shape=random&seed=4&vs=merge');
 
-    fireEvent.click(stepForward());
-    fireEvent.click(stepForward());
+    const [initialA, initialB] = sideProgress();
+    expect(initialA[1]).not.toBe(initialB[1]);
 
-    const panels = document.querySelectorAll('[class*="readouts"]');
-    expect(panels.length).toBeGreaterThanOrEqual(2);
-    // Both panels have counted something rather than one sitting at zero.
-    for (const panel of Array.from(panels).slice(0, 2)) {
-      const comparisons = within(panel as HTMLElement).queryByText('Comparisons');
-      if (!comparisons) continue;
-      const value = comparisons.previousElementSibling?.textContent ?? '0';
-      expect(Number(value)).toBeGreaterThan(0);
+    const slider = scrubSlider();
+    const half = Math.floor(Number(slider.getAttribute('max')) / 2);
+    fireEvent.change(slider, { target: { value: String(half) } });
+
+    for (const [done, total] of sideProgress()) {
+      expect(done / total).toBeGreaterThan(0.45);
+      expect(done / total).toBeLessThan(0.55);
     }
+
+    // And they finish together, rather than the shorter one stopping early.
+    seekToEnd();
+    for (const [done, total] of sideProgress()) expect(done).toBe(total);
   });
 });

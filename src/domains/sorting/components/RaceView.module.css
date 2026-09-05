@@ -1,0 +1,192 @@
+.race {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.heading {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--rule);
+}
+
+/*
+ * auto-fit rather than a fixed count: three metrics sit in one row on a wide
+ * screen and reflow to two or one without any of them being cut off.
+ */
+.deltas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.delta {
+  min-width: 0;
+  padding: 16px 20px;
+  border-left: 1px solid var(--hairline);
+}
+
+.delta:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.deltaLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.deltaRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}
+
+.deltaValue {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-soft);
+}
+
+/* A tie is not a result worth colouring. */
+.deltaValue[data-level] {
+  color: var(--text);
+}
+
+.deltaWho {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.bars {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  padding-top: 10px;
+}
+
+.bar {
+  display: block;
+  height: 6px;
+}
+
+.sides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.side {
+  flex: 1 1 420px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sideHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+}
+
+.sideName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sideName select {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.dot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.done {
+  padding: 2px 8px;
+  background: var(--v-sorted);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.own {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart {
+  height: 300px;
+}
+
+.note {
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.codeTabs {
+  display: flex;
+  padding-bottom: 12px;
+}
+
+.codeTab {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  background: none;
+  color: var(--text-muted);
+  border: 2px solid var(--border-strong);
+  margin-left: -2px;
+}
+
+.codeTab:first-child {
+  margin-left: 0;
+}
+
+.codeTab:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.codeTabOn,
+.codeTabOn:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
