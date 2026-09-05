@@ -10,5 +10,13 @@ export default defineConfig({
     // when it is pretending to be a visual browser.
     environmentOptions: { jsdom: { pretendToBeVisual: true } },
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    /*
+     * Vitest defaults to 5s. Several page-level tests mount a whole domain in
+     * jsdom and drive a real rAF playback loop, which lands within a second or
+     * two of that on an idle machine and over it on a busy one — so the suite
+     * failed on load rather than on anything being wrong. The work itself is
+     * unchanged; only the deadline is honest about what it is measuring.
+     */
+    testTimeout: 20000,
   },
 });

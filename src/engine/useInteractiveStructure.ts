@@ -24,29 +24,40 @@ export interface StructureOperation<TState, TStep, TArgs> {
   readOnly?: boolean;
 }
 
-export interface OperationRecord<TState, TStep> {
+export interface OperationRecord<TState, TStep, TArgs = unknown> {
   key: number;
   label: string;
+  /**
+   * What was run, and with what. The label is written to be read ("Insert 27")
+   * and parsing it back is not a contract; these two are. A domain that wants
+   * its history to be the source of truth — replaying it against a different
+   * configuration, say — needs to be able to re-issue the operation, not just
+   * describe it.
+   */
+  operationId: string;
+  args: TArgs;
   steps: TStep[];
   stateBefore: TState;
   stateAfter: TState;
   readOnly: boolean;
 }
 
-interface ActiveOperation<TState, TStep> {
+interface ActiveOperation<TState, TStep, TArgs> {
   label: string;
+  operationId: string;
+  args: TArgs;
   pseudocode: string[];
   steps: TStep[];
   stateBefore: TState;
   readOnly: boolean;
 }
 
-interface InteractiveState<TState, TStep> {
+interface InteractiveState<TState, TStep, TArgs> {
   /** Committed structure — what survives between operations. */
   structure: TState;
-  history: OperationRecord<TState, TStep>[];
+  history: OperationRecord<TState, TStep, TArgs>[];
   /** Ephemeral, mid-flight operation. Not folded into `structure` until commit. */
-  active: ActiveOperation<TState, TStep> | null;
+  active: ActiveOperation<TState, TStep, TArgs> | null;
   /** Cursor over the active operation (or a trivial frame over the structure). */
   frame: Frame<TState>;
   nextKey: number;
@@ -88,12 +99,14 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
 }) {
   const reducer = useCallback(
     (
-      state: InteractiveState<TState, TStep>,
+      state: InteractiveState<TState, TStep, TArgs>,
       action: Action<TState, TStep, TArgs>,
-    ): InteractiveState<TState, TStep> => {
-      const commit = (s: InteractiveState<TState, TStep>): InteractiveState<TState, TStep> => {
+    ): InteractiveState<TState, TStep, TArgs> => {
+      const commit = (
+        s: InteractiveState<TState, TStep, TArgs>,
+      ): InteractiveState<TState, TStep, TArgs> => {
         if (!s.active) return s;
-        const { steps, stateBefore, readOnly, label } = s.active;
+        const { steps, stateBefore, readOnly, label, operationId, args } = s.active;
         const end =
           steps.length === 0
             ? initFrame(stateBefore, statKeys, 0)
@@ -104,7 +117,7 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
           structure: stateAfter,
           history: [
             ...s.history,
-            { key: s.nextKey, label, steps, stateBefore, stateAfter, readOnly },
+            { key: s.nextKey, label, operationId, args, steps, stateBefore, stateAfter, readOnly },
           ],
           active: null,
           frame: initFrame(stateAfter, statKeys, 0),
@@ -121,6 +134,8 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
             ...base,
             active: {
               label: action.operation.label(action.args),
+              operationId: action.operation.id,
+              args: action.args,
               pseudocode: action.operation.pseudocode,
               steps,
               stateBefore: base.structure,
