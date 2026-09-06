@@ -73,27 +73,95 @@ describe('LinearPage', () => {
     await waitFor(() => expect(screen.getByText(/No operations yet/)).toBeDefined());
   });
 
-  it('reports stack underflow instead of breaking', async () => {
+  it('stops offering Pop rather than letting the stack underflow', () => {
     renderAt('stack');
 
     // Starting an operation commits whatever was still in flight, so the pops
     // can be fired back to back. Waiting for each of the four to animate would
     // put four sequential playbacks inside one test's time budget — which is
     // exactly what made this flaky.
-    const pop = () => fireEvent.click(screen.getByRole('button', { name: /^Pop$/ }));
-    for (let i = 0; i < 4; i++) pop();
+    const popButton = () => screen.getByRole('button', { name: /^Pop$/ });
+    for (let i = 0; i < 4; i++) fireEvent.click(popButton());
 
-    // The page seeds every structure with four values, so those four pops
-    // leave the stack empty and this fifth one underflows. "underflow" also
-    // appears in the pop pseudocode, so assert on the structure's own note
-    // rather than on the page.
-    pop();
-    await waitFor(
-      () => {
-        const note = document.querySelector('[class*="note"]');
-        expect(note?.textContent ?? '').toMatch(/underflow/);
-      },
-      { timeout: 4000 },
+    /*
+     * The page seeds every structure with four values, so those four pops
+     * empty it. This used to be where a fifth pop ran and reported "stack
+     * underflow" afterwards; the operation is now refused before it runs, and
+     * the control says why.
+     */
+    expect(popButton().hasAttribute('disabled')).toBe(true);
+    expect(popButton().getAttribute('title')).toMatch(/empty/i);
+  });
+});
+
+describe('LinearPage validation', () => {
+  /** Runs an operation and lets it finish by seeking to the end. */
+  function runAndFinish(name: RegExp) {
+    fireEvent.click(screen.getByRole('button', { name }));
+    const slider = screen.getAllByRole('slider')[0];
+    fireEvent.change(slider, { target: { value: slider.getAttribute('max') } });
+  }
+
+  it('refuses an impossible operation before it runs, not after', () => {
+    renderAt('stack');
+
+    /*
+     * The old page offered Pop unconditionally, ran it against an empty stack,
+     * and reported "stack underflow" afterwards in the same informational blue
+     * as a success — so the control said Pop, you pressed it, and nothing
+     * happened with no obvious reason why.
+     */
+    const pop = () => screen.getByRole('button', { name: 'Pop' });
+    expect(pop().hasAttribute('disabled')).toBe(false);
+
+    // Four seeded items, so four pops empties it.
+    for (let i = 0; i < 4; i++) runAndFinish(/^Pop$/);
+
+    expect(pop().hasAttribute('disabled')).toBe(true);
+    expect(pop().getAttribute('title')).toMatch(/empty/i);
+  });
+
+  it('states the valid index range beside the field and marks it when out of range', () => {
+    renderAt('array');
+    const field = screen.getByLabelText(/Index/) as HTMLInputElement;
+
+    // Four seeded items: 0..4 are all insertable positions.
+    expect(screen.getByText('0–4')).toBeDefined();
+    expect(field.getAttribute('aria-invalid')).toBeNull();
+
+    fireEvent.change(field, { target: { value: '9' } });
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    // Insert allows one past the end; remove does not.
+    expect(screen.getByRole('button', { name: /^Remove index 9$/ }).hasAttribute('disabled')).toBe(
+      true,
     );
+  });
+
+  it('keeps operations enabled while they are still possible', () => {
+    renderAt('queue');
+    expect(screen.getByRole('button', { name: 'Dequeue' }).hasAttribute('disabled')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Peek front' }).hasAttribute('disabled')).toBe(false);
+  });
+});
+
+describe('SeqView stack orientation', () => {
+  it('draws a stack as a column from a fixed base, not as a row', () => {
+    /*
+     * The CSS commented that a stack "grows upward" and then set
+     * `flex-direction: row`, so it rendered identically to an array — hiding
+     * the one property that makes it a stack.
+     */
+    renderAt('stack');
+    const cells = document.querySelector('[class*="cells"]') as HTMLElement;
+    expect(getComputedStyle(cells).flexDirection).toBe('column-reverse');
+    expect(screen.getByText('base')).toBeDefined();
+    expect(screen.getByText('top')).toBeDefined();
+  });
+
+  it('leaves the array laid out as a row', () => {
+    renderAt('array');
+    const cells = document.querySelector('[class*="cells"]') as HTMLElement;
+    expect(getComputedStyle(cells).flexDirection).toBe('row');
+    expect(screen.queryByText('base')).toBeNull();
   });
 });

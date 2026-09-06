@@ -8,8 +8,11 @@ interface SeqViewProps {
 }
 
 /**
- * One renderer for all three sequence structures — a stack is drawn bottom-up
- * and a queue labels its ends, but the underlying cells are identical.
+ * One renderer for all three sequence structures.
+ *
+ * A stack is drawn bottom-up from a fixed floor and a queue labels its ends,
+ * but the underlying cells are identical — which is the point, since a stack
+ * and a queue *are* an array with the ends restricted.
  */
 export function SeqView({ state, currentStep, variant }: SeqViewProps) {
   const touched =
@@ -41,14 +44,18 @@ export function SeqView({ state, currentStep, variant }: SeqViewProps) {
     <div className={`${styles.view} ${variant === 'stack' ? styles.stack : ''}`}>
       {state.items.length === 0 && <p className={styles.empty}>Empty — run an operation below.</p>}
 
-      <div className={styles.cells}>
-        {state.items.map((value, index) => (
-          <div key={index} className={styles.slot}>
-            <span className={styles.index}>{index}</span>
-            <div className={cellClass(index)}>{value}</div>
-            <span className={styles.end}>{endLabel(index)}</span>
-          </div>
-        ))}
+      <div className={styles.column}>
+        <div className={styles.cells}>
+          {state.items.map((value, index) => (
+            <div key={index} className={styles.slot}>
+              <span className={styles.index}>{index}</span>
+              <div className={cellClass(index)}>{value}</div>
+              <span className={styles.end}>{endLabel(index)}</span>
+            </div>
+          ))}
+        </div>
+        {/* Names the fixed end, so the growing one is unambiguous even empty. */}
+        {variant === 'stack' && <span className={styles.base}>base</span>}
       </div>
     </div>
   );

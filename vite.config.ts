@@ -11,6 +11,14 @@ export default defineConfig({
     environmentOptions: { jsdom: { pretendToBeVisual: true } },
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     /*
+     * Process CSS Modules so their rules actually apply in jsdom. Without
+     * this, `getComputedStyle` reports browser defaults and a stylesheet
+     * cannot be asserted on at all — which is how a rule setting
+     * `flex-direction: row` sat under a comment claiming the opposite,
+     * unnoticed. Limited to modules; plain CSS has nothing worth asserting.
+     */
+    css: { include: [/\.module\.css$/] },
+    /*
      * Vitest defaults to 5s. Several page-level tests mount a whole domain in
      * jsdom and drive a real rAF playback loop, which lands within a second or
      * two of that on an idle machine and over it on a busy one — so the suite

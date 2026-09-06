@@ -22,6 +22,17 @@ export interface StructureOperation<TState, TStep, TArgs> {
   generate(state: TState, args: TArgs): Generator<TStep>;
   /** Traversals and searches inspect without mutating. */
   readOnly?: boolean;
+  /**
+   * Why this operation cannot run right now, or null if it can.
+   *
+   * Pure, and checked *before* the operation is offered rather than after it
+   * has been run. Popping an empty stack used to animate a no-op and then
+   * report the failure afterwards, in the same informational blue as a
+   * success — so the control said "Pop", you pressed it, and the structure
+   * silently did nothing. A reason here lets the page disable the control and
+   * say what would make it work.
+   */
+  refuse?(state: TState, args: TArgs): string | null;
 }
 
 export interface OperationRecord<TState, TStep, TArgs = unknown> {
@@ -251,11 +262,28 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
     [],
   );
 
+  /*
+   * What the *next* operation will run against.
+   *
+   * `perform` commits whatever is in flight before generating, so an operation
+   * chosen while another is still animating sees that one's result, not the
+   * last committed structure. A page deciding which operations to offer has to
+   * ask the same question — otherwise the fourth pop of a four-item stack is
+   * still offered, because three of them have not committed yet.
+   */
+  const pendingStructure = useMemo(() => {
+    if (!state.active) return state.structure;
+    const { steps, stateBefore, readOnly } = state.active;
+    if (readOnly || steps.length === 0) return stateBefore;
+    return seek(stateBefore, steps, engine, steps.length - 1, statKeys).state;
+  }, [state.active, state.structure, engine, statKeys]);
+
   return {
     ...api,
     /** What to render: the mid-operation frame when one is active. */
     displayState: state.active ? state.frame.state : state.structure,
     structure: state.structure,
+    pendingStructure,
     history: state.history,
     active: state.active,
     frame: state.frame,
