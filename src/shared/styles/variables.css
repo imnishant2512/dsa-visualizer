@@ -74,7 +74,14 @@
   --v-sorted: #009e73; /* bluish green */
   --v-found: #00c48f; /* brighter bluish green, for a terminal hit */
   --v-range: rgba(86, 180, 233, 0.12);
-  --v-excluded: #2e2b2a;
+  /*
+   * Ruled out, but still *there*. This was a near-black a shade off the chart
+   * well, so ruled-out bars vanished — and since a late binary-search hit
+   * leaves most of the array outside the window, a successful search ended
+   * looking like an empty chart, exactly like a failed one. A dim neutral
+   * keeps the bars visible while reading as out of play.
+   */
+  --v-excluded: rgba(243, 242, 242, 0.13);
 
   /* Shape — nothing is rounded. */
   --radius: 0;

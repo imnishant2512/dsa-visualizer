@@ -10,6 +10,7 @@ export default defineConfig({
     // when it is pretending to be a visual browser.
     environmentOptions: { jsdom: { pretendToBeVisual: true } },
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['src/test/setup.ts'],
     /*
      * Process CSS Modules so their rules actually apply in jsdom. Without
      * this, `getComputedStyle` reports browser defaults and a stylesheet
