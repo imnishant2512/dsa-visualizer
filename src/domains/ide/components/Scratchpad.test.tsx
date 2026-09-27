@@ -20,7 +20,7 @@ vi.mock('@monaco-editor/react', () => ({
   useMonaco: () => null,
 }));
 
-const { IDEPage } = await import('./IDEPage');
+const { Scratchpad } = await import('./Scratchpad');
 
 const output = () => screen.getByRole('status').textContent ?? '';
 
@@ -30,9 +30,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('IDEPage', () => {
+describe('Scratchpad', () => {
   it('runs JavaScript in-tab and shows what it printed', async () => {
-    render(<IDEPage />);
+    render(<Scratchpad />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run' }));
 
@@ -42,7 +42,7 @@ describe('IDEPage', () => {
   });
 
   it('says where the code executes, and updates when the language changes', async () => {
-    render(<IDEPage />);
+    render(<Scratchpad />);
     expect(screen.getByText(/Nothing is uploaded/)).toBeDefined();
 
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'cpp' } });
@@ -50,7 +50,7 @@ describe('IDEPage', () => {
   });
 
   it('keeps each language on its own buffer', async () => {
-    render(<IDEPage />);
+    render(<Scratchpad />);
 
     fireEvent.change(screen.getByLabelText('main.js'), { target: { value: 'console.log(1);' } });
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'python' } });
@@ -80,7 +80,7 @@ describe('IDEPage', () => {
       }),
     );
 
-    render(<IDEPage />);
+    render(<Scratchpad />);
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'cpp' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run' }));
 
@@ -108,7 +108,7 @@ describe('IDEPage', () => {
       }),
     );
 
-    render(<IDEPage />);
+    render(<Scratchpad />);
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'cpp' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run' }));
 
@@ -122,7 +122,7 @@ describe('IDEPage', () => {
   it('surfaces an unreachable compiler service as an error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Failed to fetch')));
 
-    render(<IDEPage />);
+    render(<Scratchpad />);
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'rust' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run' }));
 
@@ -130,7 +130,7 @@ describe('IDEPage', () => {
   });
 
   it('restores the template after an edit', async () => {
-    render(<IDEPage />);
+    render(<Scratchpad />);
     const editor = () => screen.getByLabelText('main.js') as HTMLTextAreaElement;
 
     fireEvent.change(editor(), { target: { value: 'scratch' } });
@@ -141,19 +141,19 @@ describe('IDEPage', () => {
   });
 
   it('keeps drafts across a reload', async () => {
-    const { unmount } = render(<IDEPage />);
+    const { unmount } = render(<Scratchpad />);
     fireEvent.change(screen.getByLabelText('main.js'), { target: { value: 'remembered' } });
 
     await waitFor(() => expect(window.localStorage.getItem('dsa-visualizer:ide-code')).toContain('remembered'));
     unmount();
 
-    render(<IDEPage />);
+    render(<Scratchpad />);
     expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toBe('remembered');
   });
 
   it('falls back to the templates when stored drafts are unreadable', () => {
     window.localStorage.setItem('dsa-visualizer:ide-code', 'not json');
-    render(<IDEPage />);
+    render(<Scratchpad />);
     expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toContain('Hello, World!');
   });
 });

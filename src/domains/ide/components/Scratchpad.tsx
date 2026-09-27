@@ -4,7 +4,7 @@ import { SUPPORTED_LANGUAGES, type LanguageId } from '../languageConfig';
 import { executeJavaScript, type ExecutionResult } from '../executors/browserExecutor';
 import { executeWandbox } from '../executors/wandboxExecutor';
 import { parseDiagnostics } from '../diagnostics';
-import css from './IDEPage.module.css';
+import css from './Scratchpad.module.css';
 
 const STORAGE_KEY = 'dsa-visualizer:ide-code';
 const MARKER_OWNER = 'dsa-visualizer';
@@ -31,7 +31,13 @@ function loadDrafts(): Record<LanguageId, string> {
   return base;
 }
 
-export function IDEPage() {
+/**
+ * The multi-language scratchpad: write code, run it, read what it printed.
+ *
+ * JavaScript runs in a terminable worker in this tab; every other language is
+ * compiled on wandbox.org, and the panel says so before anything is sent.
+ */
+export function Scratchpad() {
   const monaco = useMonaco();
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const runningRef = useRef(false);
@@ -196,7 +202,7 @@ export function IDEPage() {
         </button>
         <kbd className={css.hint}>Ctrl + Enter</kbd>
 
-        <p className={css.where}>
+        <p className={`${css.where} ${langConfig.wandboxCompiler ? css.remote : ''}`}>
           {langConfig.wandboxCompiler ? (
             <>
               Compiled on <strong>wandbox.org</strong> — your code leaves the browser.

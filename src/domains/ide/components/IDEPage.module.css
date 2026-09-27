@@ -1,0 +1,50 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Fills the layout's column, so the scratchpad's editor can take the height. */
+  flex: 1;
+}
+
+.intro {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.intro p {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.modes {
+  display: flex;
+  border-bottom: 2px solid var(--rule);
+}
+
+.mode {
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  color: var(--text-muted);
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.mode:hover:not(:disabled) {
+  color: var(--accent-soft);
+}
+
+.modeOn,
+.modeOn:hover:not(:disabled) {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}

@@ -54,7 +54,9 @@
 
 .runBtn {
   background: var(--accent);
-  color: #06121d;
+  /* Was a dark navy picked for the old sky-blue accent; on vermillion it sat
+     at the edge of legibility. The accent's text colour is the light one. */
+  color: var(--text);
 }
 
 .secondaryBtn {
@@ -86,13 +88,24 @@
 /* Where the code actually executes is worth stating, not burying in a README. */
 .where {
   margin: 0 0 0 auto;
+  padding-left: 10px;
   font-size: 12px;
-  color: var(--text-faint);
+  border-left: 3px solid var(--v-sorted);
+  color: var(--text-muted);
+}
+
+/*
+ * Local is green, remote is amber. Whether code leaves the browser is the one
+ * fact on this toolbar with consequences beyond the page, so it is not left to
+ * the wording alone.
+ */
+.remote {
+  border-left-color: var(--v-bucket);
 }
 
 .where strong {
-  color: var(--text-muted);
-  font-weight: 600;
+  color: var(--v-bucket);
+  font-weight: 800;
 }
 
 .workspace {

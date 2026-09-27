@@ -6,6 +6,8 @@
   border-top: 2px solid var(--rule);
   border-bottom: 2px solid var(--rule);
   background: var(--bg);
+  /* Lets the zones respond to the width the bar is given, not the window's. */
+  container-type: inline-size;
 }
 
 .zones {
@@ -292,20 +294,25 @@
   min-width: 0;
 }
 
-@media (max-width: 720px) {
-  /*
-   * Below this the zones stack, and a left border on a full-width row reads as
-   * a stray vertical line rather than a division.
-   */
+/*
+ * Stacking is decided by the bar's own width, not the viewport's. The four
+ * zones need about 1,000px side by side; the page-wide bar has that, but the
+ * same bar in the IDE's right-hand column does not, and a viewport rule left
+ * it wrapping mid-row with a divider hanging off the first wrapped zone.
+ * Below the threshold every zone after the setup starts its own ruled band.
+ */
+@container (max-width: 960px) {
   .transport,
   .speed,
   .resets {
     padding-left: 0;
+    padding-right: 22px;
     border-left: none;
     border-top: 1px solid var(--hairline);
   }
 
   .setup {
+    flex-basis: 100%;
     padding-bottom: 10px;
   }
 }
