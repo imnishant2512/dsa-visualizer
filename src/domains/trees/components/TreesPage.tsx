@@ -10,6 +10,8 @@ import { SPEED_MS } from '../../../shared/utils/randomArray';
 import { heapEngine, initHeapState, initTreeState, nodeHeight, treeEngine } from '../engine';
 import { AVL_OPERATIONS, BST_OPERATIONS, HEAP_OPERATIONS } from '../operations';
 import { HEAP_STAT_KEYS, TREE_STAT_KEYS, type TreeArgs } from '../types';
+import { Narration } from '../../../shared/components/Narration';
+import { narrateHeapStep, narrateTreeStep } from '../narrate';
 import { HeapSvg } from './HeapSvg';
 import { TreeSvg } from './TreeSvg';
 import styles from './TreesPage.module.css';
@@ -54,6 +56,8 @@ const HEAP_SEED = [42, 33, 27, 15, 11, 8, 19];
 
 export function TreesPage() {
   const [mode, setMode] = useState<Mode>('bst');
+  /** Fifteen nodes need about 700px of width, and the box is 220px tall. */
+  const [zoom, setZoom] = useState(1);
   const [value, setValue] = useState(45);
   const [minHeap, setMinHeap] = useState(false);
   const [speedMs, setSpeedMs] = useState<number>(SPEED_MS.default * 4);
@@ -84,11 +88,30 @@ export function TreesPage() {
 
   const controller = isHeap ? heap : tree;
   const operations = isHeap ? HEAP_OPERATIONS : mode === 'avl' ? AVL_OPERATIONS : BST_OPERATIONS;
-  const args: TreeArgs = { value, min: minHeap };
+  const args: TreeArgs = useMemo(() => ({ value, min: minHeap }), [value, minHeap]);
+
+  /*
+   * Asked against the structure the next operation will see — including one
+   * still animating, since `perform` commits that first. Inserting a duplicate
+   * or deleting a missing key used to run, animate a search that found
+   * nothing to do, and then say so afterwards; now the control says so first.
+   */
+  const refusals = useMemo(() => {
+    const reasons = new Map<string, string>();
+    const state = isHeap ? heap.pendingStructure : tree.pendingStructure;
+    for (const operation of operations) {
+      const reason = (operation as { refuse?: (s: never, a: TreeArgs) => string | null }).refuse?.(
+        state as never,
+        args,
+      );
+      if (reason) reasons.set(operation.id, reason);
+    }
+    return reasons;
+  }, [operations, isHeap, heap.pendingStructure, tree.pendingStructure, args]);
 
   const run = (operationId: string) => {
     const operation = operations.find((o) => o.id === operationId);
-    if (!operation) return;
+    if (!operation || refusals.has(operationId)) return;
     if (isHeap) heap.perform(operation as never, args);
     else tree.perform(operation as never, args);
     setPlaying(true);
@@ -169,11 +192,19 @@ export function TreesPage() {
         )}
 
         <div className={styles.ops}>
-          {operations.map((operation) => (
-            <button key={operation.id} onClick={() => run(operation.id)}>
-              {operation.label(args)}
-            </button>
-          ))}
+          {operations.map((operation) => {
+            const reason = refusals.get(operation.id);
+            return (
+              <button
+                key={operation.id}
+                onClick={() => run(operation.id)}
+                disabled={Boolean(reason)}
+                title={reason}
+              >
+                {operation.label(args)}
+              </button>
+            );
+          })}
         </div>
 
         <button
@@ -187,6 +218,26 @@ export function TreesPage() {
           Reset
         </button>
       </div>
+
+      {/*
+        Narrated from the step, not from the structure's persistent note. Tree
+        notes are informational — "left-right case at 30", "rotate left around
+        80" — and a note lingers across the following steps, so preferring it
+        masked the pointer-by-pointer sentences of the rotation it introduced.
+        Refusals no longer reach this line at all: they are caught before the
+        operation runs.
+      */}
+      <Narration
+        tag={
+          controller.active && controller.frame.cursor >= 0
+            ? `Step ${controller.frame.cursor + 1}`
+            : 'Ready'
+        }
+      >
+        {isHeap
+          ? narrateHeapStep(heap.currentStep, heap.displayState)
+          : narrateTreeStep(tree.currentStep, tree.displayState)}
+      </Narration>
 
       <RunBar
         summary={controller.active?.label ?? 'No operation running'}
@@ -236,10 +287,37 @@ export function TreesPage() {
 
       <div className={styles.workspace}>
         <div className={styles.left}>
+          {/*
+            Fifteen nodes need about 700px of width in a box a fraction of
+            that, so the diagram was either cropped or unreadably small with no
+            way to choose. The tree scales; the heap is laid out to a fixed
+            width and does not need it.
+          */}
+          {!isHeap && (
+            <label className={styles.zoom}>
+              <span className={styles.zoomLabel}>Zoom</span>
+              <input
+                type="range"
+                min={0.7}
+                max={1.6}
+                step={0.1}
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
+              <span className={styles.zoomValue}>{zoom.toFixed(1)}×</span>
+            </label>
+          )}
           {isHeap ? (
             <HeapSvg state={heap.displayState} currentStep={heap.currentStep} />
           ) : (
-            <TreeSvg state={tree.displayState} currentStep={tree.currentStep} />
+            <TreeSvg
+              state={tree.displayState}
+              currentStep={tree.currentStep}
+              // AVL is the mode where the balance factor is the thing driving
+              // every decision, so that is where it is worth the clutter.
+              showBalance={mode === 'avl'}
+              zoom={zoom}
+            />
           )}
 
           <div className={styles.readoutRow}>

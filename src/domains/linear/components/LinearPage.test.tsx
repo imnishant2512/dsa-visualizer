@@ -49,6 +49,13 @@ describe('LinearPage', () => {
     renderAt('stack');
     expect(screen.getByText('12')).toBeDefined();
 
+    /*
+     * At the page's default 240ms a step, the pop's removal lands about three
+     * ticks in — close enough to waitFor's own 1s default that the test failed
+     * whenever the machine was busy. The 4x preset is the same playback path.
+     */
+    fireEvent.click(screen.getByRole('button', { name: '4×' }));
+
     fireEvent.click(screen.getByRole('button', { name: /Push/ }));
     await waitFor(() => expect(screen.getByText('9')).toBeDefined());
 
