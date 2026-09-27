@@ -110,3 +110,42 @@
   color: var(--text-faint);
   max-width: 80ch;
 }
+
+.weightForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weightForm label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.weightInput {
+  width: 72px;
+}
+
+.weightInput[aria-invalid='true'] {
+  border-color: var(--v-swap);
+}
+
+/*
+ * Standing, not per-step: it stays up for as long as A* is withdrawn, because
+ * the run's own closing note would otherwise overwrite the one sentence that
+ * explained why the A* button just behaved like Dijkstra.
+ */
+.withdrawn {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--danger-tint);
+  border-left: 3px solid var(--v-swap);
+  color: var(--danger-text);
+  font-size: 13px;
+}

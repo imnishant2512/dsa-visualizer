@@ -12,11 +12,21 @@ import {
   GRAPH_RUN_OPERATIONS,
   addEdge,
   addNode,
+  moveNode,
   removeEdge,
   removeNode,
+  setEdgeWeight,
 } from '../operations';
-import { GRAPH_STAT_KEYS, type GraphArgs } from '../types';
-import { GraphSvg } from './GraphSvg';
+import { narrateGraphStep } from '../narrate';
+import {
+  GRAPH_STAT_KEYS,
+  heuristicViolation,
+  type GraphArgs,
+  type GraphState,
+  type GraphStep,
+} from '../types';
+import { Narration } from '../../../shared/components/Narration';
+import { GraphSvg, type PendingMark } from './GraphSvg';
 import styles from './GraphsPage.module.css';
 
 const WIDTH = 760;
@@ -29,12 +39,22 @@ const STAT_LABELS = [
   { key: 'edits', label: 'Graph edits' },
 ];
 
-type Tool = 'select' | 'node' | 'edge' | 'delete';
+type Tool = 'select' | 'node' | 'edge' | 'weight' | 'delete';
+
+const TOOL_LABEL: Record<Tool, string> = {
+  select: 'Start / goal · drag',
+  node: 'Add node',
+  edge: 'Add edge',
+  weight: 'Set weight',
+  delete: 'Delete',
+};
 
 const TOOL_HINTS: Record<Tool, string> = {
-  select: 'Click a node to set the start, then another to set the goal.',
+  select: 'Click a node to set the start, then another to set the goal. Drag any node to move it.',
   node: 'Click anywhere on the canvas to drop a new node.',
   edge: 'Click two nodes to connect them. Weight comes from the distance between them.',
+  weight:
+    'Click an edge, then type its weight. A hand-set weight is marked * and stops following the distance.',
   delete: 'Click a node or an edge to remove it.',
 };
 
@@ -43,13 +63,17 @@ export function GraphsPage() {
   const [startId, setStartId] = useState<string | null>('g0');
   const [endId, setEndId] = useState<string | null>('g4');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** The edge picked by the weight tool, and the weight being typed for it. */
+  const [weightEdgeId, setWeightEdgeId] = useState<string | null>(null);
+  const [weightDraft, setWeightDraft] = useState('');
   const [speedMs, setSpeedMs] = useState<number>(SPEED_MS.default * 3);
   const [playing, setPlaying] = useState(false);
 
   const stopPlaying = useCallback(() => setPlaying(false), []);
   const initial = useMemo(() => sampleGraph(WIDTH, HEIGHT), []);
 
-  const graph = useInteractiveStructure({
+  // Explicit generics so `refuse` and the history see real GraphArgs.
+  const graph = useInteractiveStructure<GraphState, GraphStep, GraphArgs>({
     engine: graphEngine,
     statKeys: GRAPH_STAT_KEYS,
     initialState: initial,
@@ -106,9 +130,67 @@ export function GraphsPage() {
   };
 
   const handleEdgeClick = (id: string) => {
-    if (tool !== 'delete') return;
-    perform(removeEdge, { edgeId: id });
+    if (tool === 'delete') {
+      perform(removeEdge, { edgeId: id });
+      return;
+    }
+    if (tool === 'weight') {
+      setWeightEdgeId(id);
+      setWeightDraft(String(graph.pendingStructure.edges[id]?.weight ?? ''));
+    }
   };
+
+  const handleNodeMove = (id: string, x: number, y: number) => {
+    perform(moveNode, { nodeId: id, x, y });
+  };
+
+  const weightArgs = useMemo<GraphArgs>(
+    () => ({
+      x: 0,
+      y: 0,
+      nodeId: null,
+      edgeId: weightEdgeId,
+      from: startId,
+      to: endId,
+      weight: weightDraft.trim() === '' ? undefined : Number(weightDraft),
+    }),
+    [weightEdgeId, weightDraft, startId, endId],
+  );
+  const weightRefusal = setEdgeWeight.refuse?.(graph.pendingStructure, weightArgs) ?? null;
+
+  const applyWeight = () => {
+    if (weightRefusal) return;
+    perform(setEdgeWeight, weightArgs);
+    setWeightEdgeId(null);
+  };
+
+  /*
+   * Checked against the graph the next operation will see. When a hand-set
+   * weight undercuts an edge's straight-line length, A*'s estimate can
+   * overestimate and it may return a route that is not the shortest while
+   * still looking like it worked. It is withdrawn in favour of Dijkstra, and
+   * this says so for as long as it is true, not only during the run: the
+   * run's own "shortest path costs" note overwrites the one-step explanation.
+   */
+  const violation = heuristicViolation(graph.pendingStructure);
+  const violationText = violation
+    ? (() => {
+        const edge = graph.pendingStructure.edges[violation.edgeId];
+        const nodes = graph.pendingStructure.nodes;
+        const name = `${nodes[edge.from]?.label ?? edge.from}–${nodes[edge.to]?.label ?? edge.to}`;
+        return `A* is withdrawn while edge ${name} weighs ${violation.weight}, under its straight-line length of ${violation.straight.toFixed(1)}: the estimate could overestimate and return a longer route. The A* button runs Dijkstra instead.`;
+      })()
+    : null;
+
+  /** What the canvas is waiting for, drawn beside the node or edge it concerns. */
+  const pending: PendingMark | null =
+    tool === 'edge' && selectedId
+      ? { nodeId: selectedId, caption: 'now pick a second node' }
+      : tool === 'weight' && weightEdgeId
+        ? { edgeId: weightEdgeId, caption: 'type the weight' }
+        : tool === 'select' && startId && !endId
+          ? { nodeId: startId, caption: 'now pick the goal' }
+          : null;
 
   usePlaybackKeys({
     onToggle: () => setPlaying((p) => !p),
@@ -140,31 +222,59 @@ export function GraphsPage() {
 
       <div className={styles.setup}>
         <div className={styles.tools}>
-          {(['select', 'node', 'edge', 'delete'] as Tool[]).map((option) => (
+          {(['select', 'node', 'edge', 'weight', 'delete'] as Tool[]).map((option) => (
             <button
               key={option}
               className={tool === option ? styles.toolActive : undefined}
+              aria-pressed={tool === option}
               onClick={() => {
                 setTool(option);
                 setSelectedId(null);
+                setWeightEdgeId(null);
               }}
             >
-              {option === 'select'
-                ? 'Set start / goal'
-                : option === 'node'
-                  ? 'Add node'
-                  : option === 'edge'
-                    ? 'Add edge'
-                    : 'Delete'}
+              {TOOL_LABEL[option]}
             </button>
           ))}
         </div>
+
+        {tool === 'weight' && weightEdgeId && (
+          <form
+            className={styles.weightForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              applyWeight();
+            }}
+          >
+            <label>
+              Weight
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={weightDraft}
+                aria-invalid={Boolean(weightRefusal) || undefined}
+                onChange={(event) => setWeightDraft(event.target.value)}
+                className={styles.weightInput}
+                autoFocus
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={Boolean(weightRefusal)}
+              title={weightRefusal ?? undefined}
+            >
+              Set
+            </button>
+          </form>
+        )}
 
         <div className={styles.ops}>
           {GRAPH_RUN_OPERATIONS.map((operation) => (
             <button
               key={operation.id}
               disabled={!runnable}
+              title={operation.id === 'astar' && violationText ? violationText : undefined}
               onClick={() => perform(operation, {})}
             >
               {/*
@@ -193,6 +303,7 @@ export function GraphsPage() {
             setStartId('g0');
             setEndId('g4');
             setSelectedId(null);
+            setWeightEdgeId(null);
             graph.reset(sampleGraph(WIDTH, HEIGHT));
           }}
         >
@@ -200,12 +311,15 @@ export function GraphsPage() {
         </button>
       </div>
 
-      <p className={styles.hint}>
-        {TOOL_HINTS[tool]}
-        {selectedId && tool === 'edge' && (
-          <strong> Selected {state.nodes[selectedId]?.label} — click a second node.</strong>
-        )}
-      </p>
+      <p className={styles.hint}>{TOOL_HINTS[tool]}</p>
+
+      {violationText && <p className={styles.withdrawn}>{violationText}</p>}
+
+      <Narration
+        tag={graph.active && graph.frame.cursor >= 0 ? `Step ${graph.frame.cursor + 1}` : 'Ready'}
+      >
+        {narrateGraphStep(graph.currentStep, state)}
+      </Narration>
 
       <RunBar
         summary={graph.active?.label ?? 'No operation running'}
@@ -266,7 +380,7 @@ export function GraphsPage() {
         <span className={styles.metric}>
           Edges <strong>{Object.keys(state.edges).length}</strong>
         </span>
-        {state.note && <span className={styles.note}>{state.note}</span>}
+        {state.note && !graph.active && <span className={styles.note}>{state.note}</span>}
       </div>
 
       <div className={styles.workspace}>
@@ -278,9 +392,11 @@ export function GraphsPage() {
             height={HEIGHT}
             startId={startId}
             endId={endId}
-            selectedId={selectedId}
+            pending={pending}
+            draggable={tool === 'select'}
             onCanvasClick={handleCanvasClick}
             onNodeClick={handleNodeClick}
+            onNodeMove={handleNodeMove}
             onEdgeClick={handleEdgeClick}
           />
         </div>
@@ -305,9 +421,10 @@ export function GraphsPage() {
       </div>
 
       <p className={styles.footnote}>
-        Edge weights are derived from on-screen distance, which keeps A*’s straight-line estimate
-        admissible — it can never overestimate, so A* returns the same route as Dijkstra while
-        visiting fewer nodes.
+        Derived weights are the on-screen distance rounded <em>up</em>, so every edge weighs at
+        least its straight line and A*’s estimate can never overestimate — it returns
+        Dijkstra’s route while visiting fewer nodes. A weight set by hand (marked *) can break
+        that, and A* steps aside when it does.
       </p>
     </div>
   );

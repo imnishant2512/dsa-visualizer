@@ -19,6 +19,11 @@ export const graphEngine: StepEngine<GraphState, GraphStep> = {
         delete edges[step.id];
         return { ...state, edges };
       }
+      case 'moveNode':
+        return {
+          ...state,
+          nodes: { ...state.nodes, [step.id]: { ...state.nodes[step.id], x: step.x, y: step.y } },
+        };
       case 'visit':
         // Deliberately does not touch `frontier`: removing an id from the
         // middle of an ordered list cannot be undone without recording the
@@ -66,6 +71,14 @@ export const graphEngine: StepEngine<GraphState, GraphStep> = {
       }
       case 'removeEdge':
         return { ...state, edges: { ...state.edges, [step.id]: { ...step.edge } } };
+      case 'moveNode':
+        return {
+          ...state,
+          nodes: {
+            ...state.nodes,
+            [step.id]: { ...state.nodes[step.id], x: step.prevX, y: step.prevY },
+          },
+        };
       case 'visit':
         return { ...state, visited: state.visited.slice(0, -1) };
       case 'frontier':
@@ -109,6 +122,7 @@ export const graphEngine: StepEngine<GraphState, GraphStep> = {
       case 'removeNode':
       case 'addEdge':
       case 'removeEdge':
+      case 'moveNode':
         return { edits: 1 };
       default:
         return {};
