@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { initFrame, seek, stepBack, stepForward } from './player';
 import type { Frame, StepEngine } from './types';
 import { usePlaybackTicker } from './usePlaybackTicker';
@@ -72,6 +72,8 @@ interface InteractiveState<TState, TStep, TArgs> {
   /** Cursor over the active operation (or a trivial frame over the structure). */
   frame: Frame<TState>;
   nextKey: number;
+  /** How many `perform` actions this state has absorbed. See the idle effect. */
+  performed: number;
 }
 
 type Action<TState, TStep, TArgs> =
@@ -133,6 +135,7 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
           active: null,
           frame: initFrame(stateAfter, statKeys, 0),
           nextKey: s.nextKey + 1,
+          performed: s.performed,
         };
       };
 
@@ -143,6 +146,7 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
           const steps = [...action.operation.generate(base.structure, action.args)];
           return {
             ...base,
+            performed: state.performed + 1,
             active: {
               label: action.operation.label(action.args),
               operationId: action.operation.id,
@@ -209,6 +213,7 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
             active: null,
             frame: initFrame(action.structure, statKeys, 0),
             nextKey: 0,
+            performed: state.performed,
           };
 
         default:
@@ -224,7 +229,14 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
     active: null,
     frame: initFrame(initialState, statKeys, 0),
     nextKey: 0,
+    performed: 0,
   }));
+
+  /*
+   * Operations requested, counted synchronously in the event handler — ahead
+   * of the render that absorbs them. Compared with `state.performed` below.
+   */
+  const requested = useRef(0);
 
   const totalSteps = state.active?.steps.length ?? 0;
   const atEnd = state.frame.cursor >= totalSteps - 1;
@@ -243,14 +255,29 @@ export function useInteractiveStructure<TState, TStep, TArgs>({
     onAdvance: advance,
   });
 
+  /*
+   * Stop the clock once the operation has run out — unless a newer one has
+   * already been requested.
+   *
+   * This effect belongs to the render in which the old operation reached its
+   * end, and React runs it asynchronously. If the next operation was started
+   * in that gap, its handler queued "play" first and this effect then queued
+   * "stop" after it, so the new operation loaded and sat paused for good. It
+   * took a click landing in a window of a frame or two, which is exactly what
+   * the 4x preset made likely. A request the state has not absorbed yet means
+   * this effect is describing an operation that is already superseded.
+   */
   useEffect(() => {
+    if (state.performed !== requested.current) return;
     if (playing && (atEnd || !state.active)) onIdle?.();
-  }, [playing, atEnd, state.active, onIdle]);
+  }, [playing, atEnd, state.active, state.performed, onIdle]);
 
   const api = useMemo(
     () => ({
-      perform: (operation: StructureOperation<TState, TStep, TArgs>, args: TArgs) =>
-        dispatch({ type: 'perform', operation, args }),
+      perform: (operation: StructureOperation<TState, TStep, TArgs>, args: TArgs) => {
+        requested.current += 1;
+        dispatch({ type: 'perform', operation, args });
+      },
       next: () => dispatch({ type: 'forward' }),
       prev: () => dispatch({ type: 'back' }),
       seekTo: (cursor: number) => dispatch({ type: 'seek', cursor }),

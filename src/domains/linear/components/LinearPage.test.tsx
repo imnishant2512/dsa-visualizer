@@ -50,9 +50,12 @@ describe('LinearPage', () => {
     expect(screen.getByText('12')).toBeDefined();
 
     /*
-     * At the page's default 240ms a step, the pop's removal lands about three
-     * ticks in — close enough to waitFor's own 1s default that the test failed
-     * whenever the machine was busy. The 4x preset is the same playback path.
+     * The 4x preset makes the push finish within one of waitFor's polls, so
+     * Pop is usually clicked in the frame or two after the push ends — which
+     * is exactly where a real race lived: the push's "stop, I'm done" effect
+     * ran after Pop had asked to play, and the pop loaded and sat paused. It
+     * failed four runs in five before the idle effect learned to stand down
+     * for an operation that had already been superseded.
      */
     fireEvent.click(screen.getByRole('button', { name: '4×' }));
 
