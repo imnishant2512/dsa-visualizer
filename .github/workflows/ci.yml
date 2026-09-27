@@ -38,3 +38,20 @@ jobs:
       # test failure caused by one.
       - name: Typecheck and build
         run: npm run build
+
+      - name: Typecheck end-to-end tests
+        run: npm run typecheck:e2e
+
+      # Real Chrome against the built bundle: the worker sandbox, layout, and
+      # the playback clock are simulated in the unit suite and exercised here.
+      # `channel: chrome` uses the Chrome preinstalled on the runner.
+      - name: End-to-end tests
+        run: npx playwright test
+
+      - name: Keep traces from a failed end-to-end run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
