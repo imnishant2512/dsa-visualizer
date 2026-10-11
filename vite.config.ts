@@ -1,8 +1,22 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import firebase from './firebase.json';
+
+/*
+ * `vite preview` serves the same site-wide headers Firebase Hosting does —
+ * the CSP above all — so the end-to-end suite, which runs against preview,
+ * fails on anything the production policy would block. firebase.json stays
+ * the single source of truth.
+ */
+const hostingHeaders = Object.fromEntries(
+  firebase.hosting.headers
+    .filter((rule) => rule.source === '**')
+    .flatMap((rule) => rule.headers.map((header) => [header.key, header.value])),
+);
 
 export default defineConfig({
   plugins: [react()],
+  preview: { headers: hostingHeaders },
   test: {
     // Hook tests need a DOM; the algorithm tests are environment-agnostic.
     environment: 'jsdom',
