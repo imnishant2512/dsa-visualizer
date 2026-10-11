@@ -1,0 +1,9 @@
+dist
+coverage
+node_modules
+package-lock.json
+test-results
+playwright-report
+blob-report
+# The design handoff is local reference material, never committed.
+Project analysis request
