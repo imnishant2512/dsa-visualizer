@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreExportsUsedInFile": true,
-  "ignore": ["Project analysis request/**"]
+  "ignore": ["Project analysis request/**"],
+  "ignoreDependencies": ["@emnapi/core", "@emnapi/runtime"]
 }
