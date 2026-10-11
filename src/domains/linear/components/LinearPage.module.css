@@ -37,7 +37,7 @@
 
 .tabActive {
   background: var(--accent-tint);
-  color: var(--accent);
+  color: var(--accent-soft);
   font-weight: 600;
 }
 
@@ -85,7 +85,7 @@
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   background: var(--accent-tint);
-  color: var(--accent);
+  color: var(--accent-soft);
   font-family: var(--mono);
   font-size: 12px;
 }

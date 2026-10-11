@@ -52,7 +52,7 @@
 }
 
 .active {
-  color: var(--accent);
+  color: var(--accent-soft);
   font-weight: 600;
 }
 
