@@ -75,7 +75,11 @@ try {
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.waitForTimeout(400);
     const jpeg = shot.file.endsWith('.jpg');
-    await page.screenshot({ path: shot.file, type: jpeg ? 'jpeg' : 'png', quality: jpeg ? 82 : undefined });
+    await page.screenshot({
+      path: shot.file,
+      type: jpeg ? 'jpeg' : 'png',
+      quality: jpeg ? 82 : undefined,
+    });
     await page.close();
     console.log(`wrote ${shot.file}`);
   }
