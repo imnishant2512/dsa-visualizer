@@ -1,40 +1,75 @@
 {
   "name": "dsa-visualizer",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Interactive visualizer for data structures and algorithms on one exactly-reversible replay engine.",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "typecheck": "tsc -b && tsc --noEmit -p tsconfig.e2e.json",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "npm run build && playwright test",
+    "verify": "npm run format:check && npm run lint && npm run knip && npm run typecheck && npm run test:coverage && npm run build",
     "deploy": "npm run build && npx --yes firebase-tools deploy --only hosting",
-    "deploy:preview": "npm run build && npx --yes firebase-tools hosting:channel:deploy preview"
+    "deploy:preview": "npm run build && npx --yes firebase-tools hosting:channel:deploy preview",
+    "prepare": "husky",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
     "@monaco-editor/react": "^4.7.0",
-    "monaco-editor": "^0.56.0",
+    "monaco-editor": "^0.57.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.19.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.5",
     "globals": "^17.12.0",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "knip": "^6.41.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.69.0",
     "vite": "^7.1.9",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.3"
+  },
+  "overrides": {
+    "dompurify": "^3.4.16"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js}": [
+      "prettier --write",
+      "eslint --max-warnings 0"
+    ],
+    "*.{css,json,md,yml,yaml,html}": "prettier --write"
   }
 }

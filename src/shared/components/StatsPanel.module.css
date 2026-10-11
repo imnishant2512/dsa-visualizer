@@ -1,37 +1,59 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: none;
 }
 
+.heading {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--rule);
+}
+
+/*
+ * Two columns rather than auto-fit. The counters are a fixed, known set per
+ * domain, and auto-fit re-flowed them into one row or three depending on how
+ * wide the panel happened to be — which moved a number the reader was
+ * watching. Two columns is the same shape at every width above 300px.
+ */
 .counters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 12px;
+  padding: 16px 0;
 }
 
 .counter {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .value {
   font-family: var(--mono);
-  font-size: 20px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .label {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-faint);
+}
+
+.footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
 }
 
 .complexity {
@@ -40,7 +62,7 @@
   gap: 2px 12px;
   margin: 0;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hairline);
   font-size: 12px;
 }
 
@@ -55,10 +77,10 @@
 }
 
 .note {
+  margin-top: 12px;
   padding: 6px 10px;
-  background: var(--accent-soft);
-  border-radius: var(--radius-sm);
+  background: var(--accent-tint);
   font-family: var(--mono);
   font-size: 12px;
-  color: var(--accent);
+  color: var(--accent-soft);
 }

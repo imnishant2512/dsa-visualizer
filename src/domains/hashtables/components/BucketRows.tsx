@@ -8,6 +8,14 @@ interface BucketRowsProps {
 
 export function BucketRows({ state, currentStep }: BucketRowsProps) {
   const collided = new Set(state.collided);
+  /*
+   * The two strategies were drawn identically, which hid the only thing that
+   * distinguishes them. Chaining hangs a connected chain off the bucket — the
+   * bucket holds a list, and it can hold many. Probing keeps exactly one slot
+   * per row, because the whole idea is that a colliding key goes into a
+   * *different* row.
+   */
+  const chaining = state.strategy === 'chaining';
   const placing = currentStep?.kind === 'place' ? currentStep.bucket : null;
   const removing = currentStep?.kind === 'remove' ? currentStep.bucket : null;
 
@@ -21,7 +29,7 @@ export function BucketRows({ state, currentStep }: BucketRowsProps) {
   };
 
   return (
-    <div className={styles.table}>
+    <div className={`${styles.table} ${chaining ? styles.chainingTable : styles.probingTable}`}>
       {state.buckets.map((slots, bucket) => (
         <div key={bucket} className={rowClass(bucket)}>
           <span className={styles.index}>{bucket}</span>
@@ -30,6 +38,7 @@ export function BucketRows({ state, currentStep }: BucketRowsProps) {
             {slots.map((slot, pos) => (
               <span
                 key={pos}
+                data-linked={chaining && pos > 0 ? '' : undefined}
                 className={
                   slot.state === 'tombstone'
                     ? styles.tombstone
@@ -37,7 +46,11 @@ export function BucketRows({ state, currentStep }: BucketRowsProps) {
                       ? styles.hitSlot
                       : styles.slot
                 }
-                title={slot.state === 'tombstone' ? 'tombstone — probing must continue past it' : undefined}
+                title={
+                  slot.state === 'tombstone'
+                    ? 'tombstone — probing must continue past it'
+                    : undefined
+                }
               >
                 {slot.state === 'tombstone' ? `✕ ${slot.key}` : slot.key}
               </span>

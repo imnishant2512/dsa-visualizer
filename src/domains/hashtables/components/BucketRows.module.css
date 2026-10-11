@@ -15,7 +15,9 @@
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .index {
@@ -69,7 +71,7 @@
 
 .cursor {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--accent-tint);
 }
 
 .collided {
@@ -95,4 +97,32 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/*
+ * The two strategies were drawn identically, which hid the only difference
+ * that matters. Chaining links its entries visually — the bucket holds a list;
+ * probing shows one slot per row, since a colliding key lands in another row.
+ */
+.chainingTable .slot[data-linked],
+.chainingTable .hitSlot[data-linked],
+.chainingTable .tombstone[data-linked] {
+  position: relative;
+  margin-left: 12px;
+}
+
+.chainingTable .slot[data-linked]::before,
+.chainingTable .hitSlot[data-linked]::before,
+.chainingTable .tombstone[data-linked]::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  width: 12px;
+  height: 2px;
+  background: var(--border-strong);
+}
+
+.probingTable .chain {
+  /* One slot, so nothing wraps and every row is the same height. */
+  flex-wrap: nowrap;
 }

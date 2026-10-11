@@ -4,8 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DSA Visualizer</title>
+    <meta
+      name="description"
+      content="Step forwards and backwards through sorting, searching, pathfinding, trees, graphs, hash tables and linear structures — every step exactly reversible."
+    />
+    <meta name="theme-color" content="#201e1d" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Link previews. og:url and og:image must be absolute. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DSA Visualizer" />
+    <meta property="og:title" content="DSA Visualizer" />
+    <meta
+      property="og:description"
+      content="Seventeen sorts, five searches, six pathfinders, trees, graphs and hash tables on one replay engine you can scrub backwards."
+    />
+    <meta property="og:url" content="https://sorting-visualization-29fd0.web.app/" />
+    <meta property="og:image" content="https://sorting-visualization-29fd0.web.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- The brand mark from the nav. Without one, every first visit logged a
+         404 for /favicon.ico. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
+    <noscript>
+      DSA Visualizer runs its algorithms in the browser and needs JavaScript enabled.
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -58,13 +58,8 @@ export type PathAlgorithm = AlgorithmDefinition<PathInput, GridState, PathStep> 
 
 export const PATH_STAT_KEYS = ['visited', 'discovered', 'relaxations', 'pathCells'] as const;
 
-export const DEFAULT_WEIGHT = 1;
 export const HEAVY_WEIGHT = 8;
 
 export function toIndex(row: number, col: number, cols: number): number {
   return row * cols + col;
-}
-
-export function toRowCol(index: number, cols: number): { row: number; col: number } {
-  return { row: Math.floor(index / cols), col: index % cols };
 }

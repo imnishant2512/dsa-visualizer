@@ -1,0 +1,318 @@
+.bar {
+  /*
+   * Two structural rules and no side border — the bar reads as a band across
+   * the page rather than a floating card. Nothing here is rounded.
+   */
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
+  background: var(--bg);
+  /* Lets the zones respond to the width the bar is given, not the window's. */
+  container-type: inline-size;
+}
+
+.zones {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+/* Every zone but the summary is divided by a hairline and padded alike. */
+.transport,
+.speed,
+.resets {
+  flex: 0 0 auto;
+  padding: 14px 22px;
+  border-left: 1px solid var(--hairline);
+}
+
+.resets {
+  padding-right: 0;
+}
+
+.setup {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 22px 14px 0;
+}
+
+.zoneLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.setupLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.summary {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.edit {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  padding: 2px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.edit:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 40x40 is the icon-button floor; the play button is 40 tall by 118 wide. */
+.icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  background: none;
+  border: 2px solid var(--border-strong);
+}
+
+.icon:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+/*
+ * The only filled control on the page. Everything else is a ghost, so "the
+ * solid vermillion one" is a complete description of where Play is.
+ */
+.play {
+  min-width: 118px;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--text);
+  background: var(--accent-fill);
+  border: 2px solid var(--accent-fill);
+}
+
+.play:hover:not(:disabled) {
+  background: var(--accent-fill-hover);
+  border-color: var(--accent-fill-hover);
+  color: var(--text);
+}
+
+.speed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.speedRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.segmented {
+  display: flex;
+}
+
+.segment {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+  background: none;
+  color: var(--text-muted);
+  border: 2px solid var(--border-strong);
+  /* Collapses the shared edge so the three read as one control. */
+  margin-left: -2px;
+}
+
+.segment:first-child {
+  margin-left: 0;
+}
+
+.segment:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.segmentOn,
+.segmentOn:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  /* The selected segment overlaps its neighbours' borders, not the reverse. */
+  position: relative;
+  z-index: 1;
+}
+
+.msLabel {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.resets {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ghost,
+.danger {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 9px 14px;
+  background: none;
+  white-space: nowrap;
+  border: 2px solid var(--border-strong);
+  color: var(--text);
+}
+
+.ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+/*
+ * Destructive resets are the only place a second colour appears, and it is the
+ * ramp's own swap colour rather than a new one. They sit at the far end so the
+ * pointer never crosses them on the way to Play.
+ */
+.danger {
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--v-swap);
+  border-color: var(--v-swap);
+  color: var(--text);
+}
+
+.lane {
+  border-top: 1px solid var(--hairline);
+  padding: 12px 0 14px;
+}
+
+.laneHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+}
+
+.counterGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.counter {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  /* So the number stops jittering sideways as it climbs. */
+  font-variant-numeric: tabular-nums;
+}
+
+.kind {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.scrub {
+  display: block;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: none;
+}
+
+.scrub:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ticks {
+  display: flex;
+  gap: 1px;
+  height: 12px;
+  margin-top: 4px;
+}
+
+.tick {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/*
+ * Stacking is decided by the bar's own width, not the viewport's. The four
+ * zones need about 1,000px side by side; the page-wide bar has that, but the
+ * same bar in the IDE's right-hand column does not, and a viewport rule left
+ * it wrapping mid-row with a divider hanging off the first wrapped zone.
+ * Below the threshold every zone after the setup starts its own ruled band.
+ */
+@container (max-width: 960px) {
+  .transport,
+  .speed,
+  .resets {
+    padding-left: 0;
+    padding-right: 22px;
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .setup {
+    flex-basis: 100%;
+    padding-bottom: 10px;
+  }
+}

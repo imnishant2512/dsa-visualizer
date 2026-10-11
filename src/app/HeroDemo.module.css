@@ -1,0 +1,93 @@
+.demo {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--rule);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.caption {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.forward,
+.reverse {
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.forward {
+  background: rgba(243, 242, 242, 0.14);
+  color: var(--text);
+}
+
+/* The half of the loop that is the point, so it takes the accent. */
+.reverse {
+  background: var(--accent-fill);
+  color: var(--text);
+}
+
+.counter {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-width: 9ch;
+  text-align: right;
+}
+
+.chart {
+  height: 240px;
+  padding: 16px 16px 0;
+  background: var(--bg-sunken);
+}
+
+.ticks {
+  display: flex;
+  gap: 1px;
+  height: 8px;
+}
+
+.ticks span {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.note {
+  padding: 12px 18px;
+  border-top: 1px solid var(--hairline);
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 3.2em;
+}
+
+.toggle {
+  align-self: flex-start;
+  margin: 0 18px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

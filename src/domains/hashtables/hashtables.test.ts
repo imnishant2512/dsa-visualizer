@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { hashEngine, initHashState, liveKeys } from './engine';
+import {
+  hashEngine,
+  initHashState,
+  liveKeys,
+  nextCapacity,
+  replayLog,
+  type HashLogEntry,
+} from './engine';
 import { HASH_OPERATIONS, hashInsert, hashLookup, hashRemove } from './operations';
 import { hashOf, type HashState, type HashStrategy } from './types';
 
@@ -150,5 +157,72 @@ describe('chaining specifics', () => {
     state = run(state, hashRemove, 16);
     expect(state.buckets[5].map((s) => s.key)).toEqual([5, 27]);
     expect(state.buckets[5].every((s) => s.state === 'occupied')).toBe(true);
+  });
+});
+
+/**
+ * The log is what the table is derived from, so these cover the page's whole
+ * premise: that you can look at the same keys under either strategy without
+ * losing them.
+ */
+describe('replayLog', () => {
+  const log: HashLogEntry[] = [5, 16, 27, 3, 14].map((key) => ({ kind: 'insert', key }));
+
+  it('lands the same keys under either strategy, laid out differently', () => {
+    const chaining = replayLog(log, 'chaining', 11);
+    const probing = replayLog(log, 'probing', 11);
+
+    const keys = (state: HashState) => liveKeys(state).sort((a, b) => a - b);
+    expect(keys(chaining)).toEqual([3, 5, 14, 16, 27]);
+    expect(keys(probing)).toEqual(keys(chaining));
+
+    /*
+     * 5, 16 and 27 all hash to bucket 5. Chaining stacks all three there;
+     * probing pushes two of them past it. If these agreed, the strategy
+     * toggle would not be showing anything.
+     */
+    expect(chaining.buckets[5].map((slot) => slot.key)).toEqual([5, 16, 27]);
+    expect(probing.buckets[5]).toHaveLength(1);
+  });
+
+  it('replays removals against the strategy being replayed into', () => {
+    const withRemoval: HashLogEntry[] = [...log, { kind: 'remove', key: 16 }];
+    for (const strategy of ['chaining', 'probing'] as const) {
+      const state = replayLog(withRemoval, strategy, 11);
+      expect(liveKeys(state).sort((a, b) => a - b)).toEqual([3, 5, 14, 27]);
+    }
+  });
+
+  it('grows on rehash, keeping every key and dropping the tombstones', () => {
+    const grown = nextCapacity(11);
+    expect(grown).toBe(23);
+
+    const withRehash: HashLogEntry[] = [
+      ...log,
+      { kind: 'remove', key: 16 },
+      { kind: 'rehash', size: grown },
+    ];
+    const state = replayLog(withRehash, 'probing', grown);
+
+    expect(state.size).toBe(grown);
+    expect(liveKeys(state).sort((a, b) => a - b)).toEqual([3, 5, 14, 27]);
+    // A rehash re-inserts from scratch, so nothing is left marking a deletion.
+    expect(state.buckets.flat().some((slot) => slot.state === 'tombstone')).toBe(false);
+  });
+
+  it('keeps a post-rehash removal working against the new capacity', () => {
+    // 27 hashes to bucket 5 at size 11 and bucket 4 at size 23. A removal
+    // recorded before the rehash but replayed after it has to find it where
+    // the rehash put it, not where it originally went.
+    const entries: HashLogEntry[] = [
+      { kind: 'insert', key: 27 },
+      { kind: 'rehash', size: 23 },
+      { kind: 'remove', key: 27 },
+    ];
+    expect(liveKeys(replayLog(entries, 'probing', 23))).toEqual([]);
+  });
+
+  it('keeps table sizes prime as it grows', () => {
+    expect([11, 23, 47, 97].map(nextCapacity)).toEqual([23, 47, 97, 197]);
   });
 });

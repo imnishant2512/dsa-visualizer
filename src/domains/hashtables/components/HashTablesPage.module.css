@@ -17,7 +17,7 @@
 
 .intro code {
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--accent-soft);
 }
 
 .setup {
@@ -45,7 +45,7 @@
 }
 
 .toolActive {
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
@@ -58,7 +58,7 @@
 
 .hash {
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--accent-soft);
   font-size: 11px;
 }
 
@@ -90,8 +90,8 @@
 .note {
   padding: 4px 10px;
   border-radius: var(--radius-sm);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-soft);
   font-family: var(--mono);
 }
 
@@ -131,4 +131,36 @@
 
 .footnote strong {
   color: var(--text-muted);
+}
+
+.rehash,
+.rehashUrgent {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/*
+ * Past the load threshold the rehash button stops being one option among
+ * several and becomes the thing to do next, so it says so. Below it, it stays
+ * a plain control rather than nagging.
+ */
+.rehashUrgent {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.overloaded {
+  color: var(--accent-soft);
+}
+
+.loadWarning {
+  padding: 4px 10px;
+  background: var(--danger-tint);
+  border-left: 3px solid var(--v-swap);
+  color: var(--danger-text);
+  font-size: 12px;
 }

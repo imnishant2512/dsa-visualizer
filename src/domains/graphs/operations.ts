@@ -1,7 +1,7 @@
 import type { StructureOperation } from '../../engine/useInteractiveStructure';
 import { edgeBetween, neighboursOf } from './engine';
 import type { GraphArgs, GraphState, GraphStep } from './types';
-import { DISTANCE_SCALE, euclidean, weightBetween } from './types';
+import { DISTANCE_SCALE, euclidean, heuristicViolation, weightBetween } from './types';
 
 export type GraphOperation = StructureOperation<GraphState, GraphStep, GraphArgs>;
 
@@ -81,7 +81,7 @@ export const addEdge: GraphOperation = {
   label: () => 'Add edge',
   pseudocode: [
     'addEdge(a, b):',
-    '  weight = round(distance(a, b) / scale)',
+    '  weight = ceil(distance(a, b) / scale)',
     '  edges[id] = { a, b, weight }',
   ],
   *generate(state, { from, to }) {
@@ -109,6 +109,66 @@ export const removeEdge: GraphOperation = {
     yield* clearMarks(state);
     if (!edgeId || !state.edges[edgeId]) return;
     yield { kind: 'removeEdge', id: edgeId, edge: { ...state.edges[edgeId] }, line: 1 };
+  },
+};
+
+/**
+ * Set an edge's weight by hand. Expressed as remove-then-add of the same edge,
+ * which the engine already inverts exactly, rather than as a new step kind.
+ */
+export const setEdgeWeight: GraphOperation = {
+  id: 'set-weight',
+  label: ({ weight }) => `Set weight ${weight ?? '?'}`,
+  pseudocode: ['setWeight(edge, w):', '  edges[id].weight = w   // no longer tied to distance'],
+  refuse: (state, { edgeId, weight }) =>
+    !edgeId || !state.edges[edgeId]
+      ? 'Pick an edge first.'
+      : weight === undefined || !Number.isInteger(weight) || weight < 1
+        ? 'A weight must be a whole number of at least 1.'
+        : weight === state.edges[edgeId].weight
+          ? 'That is already its weight.'
+          : null,
+  *generate(state, { edgeId, weight }) {
+    yield* clearMarks(state);
+    if (!edgeId || !state.edges[edgeId] || weight === undefined) return;
+    const edge = state.edges[edgeId];
+    yield { kind: 'removeEdge', id: edgeId, edge: { ...edge }, line: 1 };
+    yield { kind: 'addEdge', id: edgeId, edge: { ...edge, weight, manual: true }, line: 1 };
+  },
+};
+
+/**
+ * Move a node, carrying its derived edge weights with it.
+ *
+ * A derived weight is a statement about distance, so it has to follow the
+ * node; a manual one is a statement the user made, so it stays put. Left
+ * alone, a derived edge dragged longer would fall under its own straight-line
+ * length and quietly break A* — the move re-derives it instead.
+ */
+export const moveNode: GraphOperation = {
+  id: 'move-node',
+  label: () => 'Move node',
+  pseudocode: [
+    'moveNode(id, x, y):',
+    '  nodes[id].position = (x, y)',
+    '  re-derive the weight of each edge that was not set by hand',
+  ],
+  *generate(state, { nodeId, x, y }) {
+    if (!nodeId || !state.nodes[nodeId]) return;
+    const node = state.nodes[nodeId];
+    if (node.x === x && node.y === y) return;
+    yield { kind: 'moveNode', id: nodeId, x, y, prevX: node.x, prevY: node.y, line: 1 };
+
+    const moved = { ...node, x, y };
+    for (const [edgeId, edge] of Object.entries(state.edges)) {
+      if (edge.manual || (edge.from !== nodeId && edge.to !== nodeId)) continue;
+      const other = state.nodes[edge.from === nodeId ? edge.to : edge.from];
+      if (!other) continue;
+      const weight = weightBetween(moved, other);
+      if (weight === edge.weight) continue;
+      yield { kind: 'removeEdge', id: edgeId, edge: { ...edge }, line: 2 };
+      yield { kind: 'addEdge', id: edgeId, edge: { ...edge, weight }, line: 2 };
+    }
   },
 };
 
@@ -189,9 +249,9 @@ export const graphDfs: GraphOperation = {
 };
 
 /**
- * Dijkstra and A* again share one generator — the heuristic is the only
- * difference. Because edge weights are derived from on-screen distance, the
- * straight-line estimate never overestimates, so A* stays admissible.
+ * Dijkstra and A* share one generator — the heuristic is the only difference.
+ * A* is only safe while every edge weighs at least its straight-line length;
+ * see `heuristicViolation`, and the fallback in `graphAstar`.
  */
 function* shortestPath(
   state: GraphState,
@@ -303,6 +363,27 @@ export const graphAstar: GraphOperation = {
       yield { kind: 'note', note: 'A* needs a goal node — pick one', prevNote: null, line: 0 };
       return;
     }
+    /*
+     * Withdrawn, loudly, when its estimate could overestimate. A* with an
+     * inadmissible heuristic still returns *a* route and still looks like it
+     * worked — it just may not be the shortest one, which is the one thing a
+     * shortest-path algorithm promises. Rather than hand back a possibly
+     * wrong answer, this runs Dijkstra and says exactly which edge forced it.
+     */
+    const violation = heuristicViolation(state);
+    if (violation) {
+      const edge = state.edges[violation.edgeId];
+      const a = state.nodes[edge.from]?.label ?? edge.from;
+      const b = state.nodes[edge.to]?.label ?? edge.to;
+      yield {
+        kind: 'note',
+        note: `A* withdrawn — edge ${a}–${b} weighs ${violation.weight}, less than its straight-line length of ${violation.straight.toFixed(1)}, so the estimate could overestimate. Running Dijkstra instead.`,
+        prevNote: null,
+        line: 0,
+      };
+      yield* shortestPath(state, from, to, () => 0);
+      return;
+    }
     const goal = state.nodes[to];
     yield* shortestPath(state, from, to, (id) =>
       state.nodes[id] ? euclidean(state.nodes[id], goal) / DISTANCE_SCALE : 0,
@@ -328,7 +409,7 @@ export const graphTopologicalSort: GraphOperation = {
     yield* clearMarks(state);
     const inDegree: Record<string, number> = {};
     for (const id of Object.keys(state.nodes)) inDegree[id] = 0;
-    
+
     // Treat edges as directed from `edge.from` to `edge.to`
     for (const edge of Object.values(state.edges)) {
       inDegree[edge.to] = (inDegree[edge.to] || 0) + 1;
@@ -388,7 +469,7 @@ export const graphCycleDetection: GraphOperation = {
   ],
   *generate(state) {
     yield* clearMarks(state);
-    
+
     const color: Record<string, 'white' | 'grey' | 'black'> = {};
     for (const id of Object.keys(state.nodes)) color[id] = 'white';
     let prevPointer: string | null = null;
@@ -397,7 +478,7 @@ export const graphCycleDetection: GraphOperation = {
     function* dfs(id: string, parent: string | null): Generator<GraphStep> {
       color[id] = 'grey';
       yield { kind: 'frontier', id, line: 4 }; // frontier = grey
-      
+
       yield { kind: 'pointer', id, prevId: prevPointer, line: 4 };
       prevPointer = id;
 
@@ -425,7 +506,7 @@ export const graphCycleDetection: GraphOperation = {
         if (cycleFound) break;
       }
     }
-    
+
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 8 };
     if (!cycleFound) {
       yield { kind: 'note', note: 'No cycle found', prevNote: null, line: 8 };
@@ -475,7 +556,7 @@ export const graphPrim: GraphOperation = {
 
       open.delete(best);
       done.add(best);
-      
+
       yield { kind: 'pointer', id: best, prevId: prevPointer, line: 3 };
       prevPointer = best;
       yield { kind: 'visit', id: best, line: 4 };
@@ -501,12 +582,12 @@ export const graphPrim: GraphOperation = {
     }
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 6 };
     yield { kind: 'note', note: `MST Cost: ${mstCost}`, prevNote: null, line: 6 };
-  }
+  },
 };
 
 export const graphKruskal: GraphOperation = {
   id: 'kruskal',
-  label: () => 'Kruskal\'s MST',
+  label: () => "Kruskal's MST",
   shortLabel: "Kruskal's MST",
   readOnly: true,
   pseudocode: [
@@ -558,13 +639,20 @@ export const graphKruskal: GraphOperation = {
         yield { kind: 'visit', id: edge.to, line: 5 };
       }
     }
-    
+
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 5 };
     yield { kind: 'note', note: `MST Cost: ${mstCost}`, prevNote: null, line: 5 };
-  }
+  },
 };
 
-export const GRAPH_EDIT_OPERATIONS: GraphOperation[] = [addNode, addEdge, removeNode, removeEdge];
+export const GRAPH_EDIT_OPERATIONS: GraphOperation[] = [
+  addNode,
+  addEdge,
+  removeNode,
+  removeEdge,
+  setEdgeWeight,
+  moveNode,
+];
 export const GRAPH_RUN_OPERATIONS: GraphOperation[] = [
   graphBfs,
   graphDfs,

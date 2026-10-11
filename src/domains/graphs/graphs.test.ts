@@ -9,10 +9,15 @@ import {
   graphBfs,
   graphDfs,
   graphDijkstra,
+  moveNode,
   removeEdge,
   removeNode,
+  setEdgeWeight,
 } from './operations';
-import type { GraphArgs, GraphState } from './types';
+import { heuristicViolation, weightBetween, type GraphArgs, type GraphState } from './types';
+
+/** A complete argument object, for calling `generate` or `refuse` directly. */
+const ARGS: GraphArgs = { x: 0, y: 0, nodeId: null, edgeId: null, from: null, to: null };
 
 function run(
   state: GraphState,
@@ -86,9 +91,7 @@ describe('graph editing', () => {
     let state = sampleGraph();
     state = run(state, removeNode, { nodeId: 'g0' });
     expect(state.nodes.g0).toBeUndefined();
-    expect(
-      Object.values(state.edges).some((e) => e.from === 'g0' || e.to === 'g0'),
-    ).toBe(false);
+    expect(Object.values(state.edges).some((e) => e.from === 'g0' || e.to === 'g0')).toBe(false);
   });
 
   it('removes a single edge without touching its nodes', () => {
@@ -229,5 +232,90 @@ describe('operation naming', () => {
 
     expect(names.every((name) => name.trim().length > 0)).toBe(true);
     expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+describe('A* admissibility', () => {
+  it('derives weights that keep A* admissible on the default graph', () => {
+    /*
+     * Weights were rounded to nearest, under a comment claiming that kept A*
+     * admissible. Every edge of the default graph came out *under* its own
+     * straight-line length — 2 against 2.35 — so the heuristic could
+     * overestimate before anyone edited anything. Ceiling fixes it at source.
+     */
+    expect(heuristicViolation(sampleGraph())).toBeNull();
+  });
+
+  it('withdraws A* in favour of Dijkstra once a hand-set weight breaks it, and says why', () => {
+    let state = sampleGraph();
+    const chord = edgeBetween(state, 'g0', 'g4')!;
+    state = run(state, setEdgeWeight, { edgeId: chord, weight: 1 });
+    expect(heuristicViolation(state)).not.toBeNull();
+
+    const astar = run(state, graphAstar, { from: 'g0', to: 'g4' });
+    const dijkstra = run(state, graphDijkstra, { from: 'g0', to: 'g4' });
+
+    // Never a silently non-optimal route: the cost is Dijkstra's, and the
+    // reason is visible rather than implied.
+    expect(pathCost(astar)).toBe(pathCost(dijkstra));
+    // It ran as Dijkstra, heuristic and all — not A* with a warning attached.
+    expect(astar.visited.length).toBe(dijkstra.visited.length);
+  });
+
+  it('announces the withdrawal before the search runs', () => {
+    let state = sampleGraph();
+    state = run(state, setEdgeWeight, { edgeId: edgeBetween(state, 'g0', 'g4')!, weight: 1 });
+    const notes = [...graphAstar.generate(state, { ...ARGS, from: 'g0', to: 'g4' })]
+      .filter((step) => step.kind === 'note')
+      .map((step) => (step.kind === 'note' ? step.note : ''));
+    expect(notes[0]).toMatch(/A\* withdrawn — edge A–E weighs 1/);
+    expect(notes[0]).toMatch(/Running Dijkstra instead/);
+  });
+
+  it('keeps A* when no edge undercuts its straight line', () => {
+    const state = sampleGraph();
+    const notes = [...graphAstar.generate(state, { ...ARGS, from: 'g0', to: 'g4' })]
+      .filter((step) => step.kind === 'note')
+      .map((step) => (step.kind === 'note' ? step.note : ''));
+    expect(notes.some((note) => /withdrawn/.test(note ?? ''))).toBe(false);
+  });
+});
+
+describe('editing weights and positions', () => {
+  it('sets a weight by hand, marks it manual, and inverts exactly', () => {
+    const state = sampleGraph();
+    const edgeId = edgeBetween(state, 'g0', 'g1')!;
+    let current = state;
+    for (const step of setEdgeWeight.generate(state, { ...ARGS, edgeId, weight: 9 })) {
+      const before = structuredClone(current);
+      const after = graphEngine.applyStep(current, step);
+      expect(graphEngine.invertStep(after, step)).toEqual(before);
+      current = after;
+    }
+    expect(current.edges[edgeId]).toMatchObject({ weight: 9, manual: true });
+  });
+
+  it('refuses weights that are not whole numbers of at least one', () => {
+    const state = sampleGraph();
+    const edgeId = edgeBetween(state, 'g0', 'g1')!;
+    expect(setEdgeWeight.refuse?.(state, { ...ARGS, edgeId, weight: 0 })).toMatch(/at least 1/);
+    expect(setEdgeWeight.refuse?.(state, { ...ARGS, edgeId, weight: 2.5 })).toMatch(/whole number/);
+    expect(setEdgeWeight.refuse?.(state, { ...ARGS, edgeId: null, weight: 4 })).toMatch(/edge/);
+  });
+
+  it('re-derives derived weights when a node moves, and leaves manual ones alone', () => {
+    let state = sampleGraph();
+    const manual = edgeBetween(state, 'g0', 'g4')!;
+    const derived = edgeBetween(state, 'g0', 'g1')!;
+    state = run(state, setEdgeWeight, { edgeId: manual, weight: 20 });
+
+    const far = { x: state.nodes.g0.x - 300, y: state.nodes.g0.y };
+    state = run(state, moveNode, { nodeId: 'g0', ...far });
+
+    expect(state.nodes.g0).toMatchObject(far);
+    expect(state.edges[manual].weight).toBe(20);
+    expect(state.edges[derived].weight).toBe(weightBetween(state.nodes.g0, state.nodes.g1));
+    // Moving never breaks admissibility on its own — only a manual weight can.
+    expect(heuristicViolation(state)).toBeNull();
   });
 });

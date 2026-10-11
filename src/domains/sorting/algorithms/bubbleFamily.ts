@@ -10,7 +10,8 @@ import { defineSort } from './define';
 export const bubbleSort = defineSort({
   id: 'bubble',
   label: 'Bubble Sort',
-  summary: 'Repeatedly swaps adjacent out-of-order pairs; the largest value bubbles to the end each pass.',
+  summary:
+    'Repeatedly swaps adjacent out-of-order pairs; the largest value bubbles to the end each pass.',
   complexity: { time: 'O(n²)', space: 'O(1)' },
   pseudocode: [
     'for i = 0 to n-2',
@@ -43,7 +44,8 @@ export const bubbleSort = defineSort({
 export const cocktailSort = defineSort({
   id: 'cocktail',
   label: 'Cocktail Shaker Sort',
-  summary: 'Bubble sort that alternates direction each pass, so small values at the tail rise quickly too.',
+  summary:
+    'Bubble sort that alternates direction each pass, so small values at the tail rise quickly too.',
   complexity: { time: 'O(n²)', space: 'O(1)' },
   pseudocode: [
     'lo = 0; hi = n-1',
@@ -92,7 +94,8 @@ export const cocktailSort = defineSort({
 export const combSort = defineSort({
   id: 'comb',
   label: 'Comb Sort',
-  summary: 'Bubble sort with a gap that shrinks by ~1.3× each pass, killing off distant small values early.',
+  summary:
+    'Bubble sort with a gap that shrinks by ~1.3× each pass, killing off distant small values early.',
   complexity: { time: 'O(n²) worst, ~O(n log n) typical', space: 'O(1)' },
   pseudocode: [
     'gap = n',
@@ -127,7 +130,8 @@ export const combSort = defineSort({
 export const bogoSort = defineSort({
   id: 'bogo',
   label: 'Bogo Sort',
-  summary: 'Shuffles at random and checks whether it got lucky. Included as a joke — size is capped for your browser’s sake.',
+  summary:
+    'Shuffles at random and checks whether it got lucky. Included as a joke — size is capped for your browser’s sake.',
   complexity: { time: 'O((n+1)!) average, unbounded worst', space: 'O(1)' },
   pseudocode: [
     'while not sorted:',
@@ -170,7 +174,8 @@ export const bogoSort = defineSort({
 export const gnomeSort = defineSort({
   id: 'gnome',
   label: 'Gnome Sort',
-  summary: 'Walks forward; on finding an out-of-order pair it swaps and steps back until order is restored.',
+  summary:
+    'Walks forward; on finding an out-of-order pair it swaps and steps back until order is restored.',
   complexity: { time: 'O(n²)', space: 'O(1)' },
   pseudocode: [
     'i = 0',

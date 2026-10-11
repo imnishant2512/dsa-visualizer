@@ -1,34 +1,54 @@
+.viewport {
+  /*
+   * Cells are a fixed size and the grid scrolls. Letting them shrink to fit
+   * the viewport produced ~9px touch targets on a phone — below any usable
+   * threshold, and the cell indices became unreadable long before that.
+   */
+  --cell-size: 22px;
+
+  background: var(--bg-sunken);
+  border: 2px solid var(--rule);
+  padding: 6px;
+  overflow-x: auto;
+  /* Without this a touch drag scrolls the page instead of painting. */
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+}
+
 .grid {
   display: grid;
   gap: 1px;
-  padding: 6px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  user-select: none;
-  cursor: crosshair;
-  overflow: hidden;
+  width: max-content;
 }
 
 .cell {
-  aspect-ratio: 1;
-  min-width: 0;
-  border-radius: 2px;
+  width: var(--cell-size);
+  height: var(--cell-size);
   background: var(--bg-raised);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1;
   transition: background-color 0.1s linear;
 }
 
+/*
+ * The keyboard cursor. Inset rather than an outline so it does not overlap the
+ * neighbouring cells at a 1px gap, and drawn on top of whatever fill the cell
+ * already has.
+ */
+.focused {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .empty {
-  background: #1a2130;
+  background: #262322;
 }
 
 .wall {
-  background: #4a5468;
+  background: #5a5350;
 }
 
 .weight {
@@ -55,19 +75,19 @@
 .start,
 .end {
   background: var(--bg-sunken);
-  color: var(--accent);
-  font-size: 11px;
+  color: var(--accent-soft);
+  font-size: 12px;
 }
 
 .end {
   color: var(--v-sorted);
 }
 
-.marker {
+.marker,
+.weightMark {
   pointer-events: none;
 }
 
 .weightMark {
-  pointer-events: none;
   font-family: var(--mono);
 }

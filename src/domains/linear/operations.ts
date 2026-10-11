@@ -25,6 +25,10 @@ function* clearMarks(state: SeqState): Generator<SeqStep> {
 export const arrayInsert: SeqOperation = {
   id: 'insert',
   label: ({ value, index }) => `Insert ${value} at ${index}`,
+  refuse: (state, { index }) =>
+    index < 0 || index > state.items.length
+      ? `Index must be between 0 and ${state.items.length} — inserting at ${state.items.length} appends.`
+      : null,
   pseudocode: [
     'insertAt(index, value):',
     '  shift every element from index right by one',
@@ -35,7 +39,12 @@ export const arrayInsert: SeqOperation = {
     const at = Math.max(0, Math.min(index, state.items.length));
     // Walking to the insertion point is what makes array inserts O(n).
     for (let i = state.items.length - 1; i >= at; i--) {
-      yield { kind: 'pointer', index: i, prevIndex: i === state.items.length - 1 ? null : i + 1, line: 1 };
+      yield {
+        kind: 'pointer',
+        index: i,
+        prevIndex: i === state.items.length - 1 ? null : i + 1,
+        line: 1,
+      };
     }
     yield { kind: 'insertAt', index: at, value, line: 2 };
     yield { kind: 'pointer', index: null, prevIndex: at < state.items.length ? at : null, line: 2 };
@@ -45,6 +54,12 @@ export const arrayInsert: SeqOperation = {
 export const arrayRemove: SeqOperation = {
   id: 'remove',
   label: ({ index }) => `Remove index ${index}`,
+  refuse: (state, { index }) =>
+    state.items.length === 0
+      ? 'The array is empty — there is nothing to remove.'
+      : index < 0 || index >= state.items.length
+        ? `Index must be between 0 and ${state.items.length - 1}.`
+        : null,
   pseudocode: [
     'removeAt(index):',
     '  read a[index]',
@@ -66,6 +81,12 @@ export const arrayRemove: SeqOperation = {
 export const arrayGet: SeqOperation = {
   id: 'get',
   label: ({ index }) => `Read index ${index}`,
+  refuse: (state, { index }) =>
+    state.items.length === 0
+      ? 'The array is empty — there is nothing to read.'
+      : index < 0 || index >= state.items.length
+        ? `Index must be between 0 and ${state.items.length - 1}.`
+        : null,
   readOnly: true,
   pseudocode: ['get(index):', '  return a[index]   // O(1), no walking'],
   *generate(state, { index }) {
@@ -121,11 +142,17 @@ export const stackPush: SeqOperation = {
 export const stackPop: SeqOperation = {
   id: 'pop',
   label: () => 'Pop',
+  refuse: (state) => (state.items.length === 0 ? 'The stack is empty — nothing to pop.' : null),
   pseudocode: ['pop():', '  if empty: underflow', '  return a[top], then shrink   // O(1)'],
   *generate(state) {
     yield* clearMarks(state);
     if (state.items.length === 0) {
-      yield { kind: 'note', note: 'stack underflow — nothing to pop', prevNote: state.note, line: 1 };
+      yield {
+        kind: 'note',
+        note: 'stack underflow — nothing to pop',
+        prevNote: state.note,
+        line: 1,
+      };
       return;
     }
     const top = state.items.length - 1;
@@ -139,6 +166,7 @@ export const stackPop: SeqOperation = {
 export const stackPeek: SeqOperation = {
   id: 'peek',
   label: () => 'Peek',
+  refuse: (state) => (state.items.length === 0 ? 'The stack is empty — nothing on top.' : null),
   readOnly: true,
   pseudocode: ['peek():', '  return a[top] without removing it'],
   *generate(state) {
@@ -171,6 +199,7 @@ export const queueEnqueue: SeqOperation = {
 export const queueDequeue: SeqOperation = {
   id: 'dequeue',
   label: () => 'Dequeue',
+  refuse: (state) => (state.items.length === 0 ? 'The queue is empty — nothing to dequeue.' : null),
   pseudocode: [
     'dequeue():',
     '  if empty: underflow',
@@ -180,7 +209,12 @@ export const queueDequeue: SeqOperation = {
   *generate(state) {
     yield* clearMarks(state);
     if (state.items.length === 0) {
-      yield { kind: 'note', note: 'queue underflow — nothing to dequeue', prevNote: state.note, line: 1 };
+      yield {
+        kind: 'note',
+        note: 'queue underflow — nothing to dequeue',
+        prevNote: state.note,
+        line: 1,
+      };
       return;
     }
     yield { kind: 'pointer', index: 0, prevIndex: null, line: 2 };
@@ -193,6 +227,8 @@ export const queueDequeue: SeqOperation = {
 export const queuePeek: SeqOperation = {
   id: 'front',
   label: () => 'Peek front',
+  refuse: (state) =>
+    state.items.length === 0 ? 'The queue is empty — nothing at the front.' : null,
   readOnly: true,
   pseudocode: ['front():', '  return the first value without removing it'],
   *generate(state) {
@@ -276,6 +312,12 @@ export const listInsertTail: ListOperation = {
 export const listRemoveValue: ListOperation = {
   id: 'remove',
   label: ({ value }) => `Remove ${value}`,
+  refuse: (state, { value }) =>
+    state.headId === null
+      ? 'The list is empty — there is nothing to remove.'
+      : !listOrder(state).some((id) => state.nodes[id].value === value)
+        ? `${value} is not in the list.`
+        : null,
   pseudocode: [
     'remove(value):',
     '  walk the chain looking for value',
@@ -320,6 +362,7 @@ export const listRemoveValue: ListOperation = {
 export const listSearch: ListOperation = {
   id: 'search',
   label: ({ value }) => `Search for ${value}`,
+  refuse: (state) => (state.headId === null ? 'The list is empty — nothing to search.' : null),
   readOnly: true,
   pseudocode: [
     'search(value):',

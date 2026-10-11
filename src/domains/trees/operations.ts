@@ -40,9 +40,19 @@ function* descendToSlot(
   }
 }
 
+/**
+ * Whether a value is present, for `refuse()`. Pure and step-free: it answers
+ * "can this operation run" before anything animates, which is the point.
+ */
+function hasValue(state: TreeState, value: number): boolean {
+  return Object.values(state.nodes).some((node) => node.value === value);
+}
+
 export const bstInsert: TreeOperation = {
   id: 'insert',
   label: ({ value }) => `Insert ${value}`,
+  refuse: (state, { value }) =>
+    hasValue(state, value) ? `${value} is already in the tree — a BST holds each key once.` : null,
   pseudocode: BST_INSERT_CODE,
   *generate(state, { value }) {
     const ctx = new TreeCtx(state);
@@ -151,6 +161,12 @@ function* deleteValue(ctx: TreeCtx, value: number): Generator<TreeStep, string |
 export const bstDelete: TreeOperation = {
   id: 'delete',
   label: ({ value }) => `Delete ${value}`,
+  refuse: (state, { value }) =>
+    state.rootId === null
+      ? 'The tree is empty — there is nothing to delete.'
+      : !hasValue(state, value)
+        ? `${value} is not in the tree.`
+        : null,
   pseudocode: BST_DELETE_CODE,
   *generate(state, { value }) {
     const ctx = new TreeCtx(state);
@@ -205,13 +221,28 @@ function* rebalanceUpward(ctx: TreeCtx, startId: string | null): Generator<TreeS
     yield* ctx.pointer(cursor, 2);
     const balance = ctx.balance(cursor);
 
+    /*
+     * The four cases are named before the pointer surgery starts. "Rotate
+     * right around 30" describes a mechanism; "left-left" names the shape that
+     * made it necessary, which is the part worth recognising next time.
+     */
     if (balance > 1) {
       const left = ctx.nodes[cursor].leftId!;
-      if (ctx.balance(left) < 0) yield* rotateLeft(ctx, left);
+      const leftHeavy = ctx.balance(left) < 0;
+      yield* ctx.note(
+        `${leftHeavy ? 'Left-right' : 'Left-left'} case at ${ctx.nodes[cursor].value} — balance ${balance}`,
+        leftHeavy ? 4 : 3,
+      );
+      if (leftHeavy) yield* rotateLeft(ctx, left);
       yield* rotateRight(ctx, cursor);
     } else if (balance < -1) {
       const right = ctx.nodes[cursor].rightId!;
-      if (ctx.balance(right) > 0) yield* rotateRight(ctx, right);
+      const rightHeavy = ctx.balance(right) > 0;
+      yield* ctx.note(
+        `${rightHeavy ? 'Right-left' : 'Right-right'} case at ${ctx.nodes[cursor].value} — balance ${balance}`,
+        rightHeavy ? 3 : 4,
+      );
+      if (rightHeavy) yield* rotateRight(ctx, right);
       yield* rotateLeft(ctx, cursor);
     }
     cursor = parent;
@@ -222,6 +253,8 @@ function* rebalanceUpward(ctx: TreeCtx, startId: string | null): Generator<TreeS
 export const avlInsert: TreeOperation = {
   id: 'avl-insert',
   label: ({ value }) => `Insert ${value}`,
+  refuse: (state, { value }) =>
+    hasValue(state, value) ? `${value} is already in the tree — a BST holds each key once.` : null,
   pseudocode: AVL_CODE,
   *generate(state, { value }) {
     const ctx = new TreeCtx(state);
@@ -249,6 +282,12 @@ export const avlInsert: TreeOperation = {
 export const avlDelete: TreeOperation = {
   id: 'avl-delete',
   label: ({ value }) => `Delete ${value}`,
+  refuse: (state, { value }) =>
+    state.rootId === null
+      ? 'The tree is empty — there is nothing to delete.'
+      : !hasValue(state, value)
+        ? `${value} is not in the tree.`
+        : null,
   pseudocode: AVL_CODE,
   *generate(state, { value }) {
     const ctx = new TreeCtx(state);
@@ -283,7 +322,12 @@ function makeTraversal(
 export const inorderTraversal = makeTraversal(
   'inorder',
   'In-order',
-  ['inorder(node):', '  inorder(node.left)', '  visit(node)   // sorted for a BST', '  inorder(node.right)'],
+  [
+    'inorder(node):',
+    '  inorder(node.left)',
+    '  visit(node)   // sorted for a BST',
+    '  inorder(node.right)',
+  ],
   function* walk(ctx, id): Generator<TreeStep> {
     if (id === null) return;
     yield* walk(ctx, ctx.nodes[id].leftId);
@@ -322,7 +366,13 @@ export const postorderTraversal = makeTraversal(
 export const levelorderTraversal = makeTraversal(
   'levelorder',
   'Level-order',
-  ['levelorder():', '  queue = [root]', '  while queue is not empty:', '    node = queue.shift(); visit(node)', '    queue.push(node.left, node.right)'],
+  [
+    'levelorder():',
+    '  queue = [root]',
+    '  while queue is not empty:',
+    '    node = queue.shift(); visit(node)',
+    '    queue.push(node.left, node.right)',
+  ],
   function* walk(ctx, rootId): Generator<TreeStep> {
     if (rootId === null) return;
     const queue: string[] = [rootId];
@@ -400,6 +450,7 @@ export const heapInsert: HeapOperation = {
 export const heapExtract: HeapOperation = {
   id: 'heap-extract',
   label: ({ min }) => `Extract ${min ? 'min' : 'max'}`,
+  refuse: (state) => (state.items.length === 0 ? 'The heap is empty — nothing to extract.' : null),
   pseudocode: [
     'extract():',
     '  take the root',
@@ -461,6 +512,7 @@ export const heapExtract: HeapOperation = {
 export const heapPeek: HeapOperation = {
   id: 'heap-peek',
   label: ({ min }) => `Peek ${min ? 'min' : 'max'}`,
+  refuse: (state) => (state.items.length === 0 ? 'The heap is empty — nothing at the root.' : null),
   readOnly: true,
   pseudocode: ['peek():', '  the root is always the winner   // O(1)'],
   *generate(state) {

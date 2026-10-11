@@ -1,8 +1,9 @@
 .wrap {
   background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 2px solid var(--rule);
   overflow: hidden;
+  /* A node drag on a touchscreen must move the node, not scroll the page. */
+  touch-action: none;
 }
 
 .svg {
@@ -43,7 +44,7 @@
 }
 
 .node,
-.selected,
+.pending,
 .frontier,
 .visited,
 .active,
@@ -53,7 +54,7 @@
 }
 
 .node circle,
-.selected circle,
+.pending circle,
 .frontier circle,
 .visited circle,
 .active circle,
@@ -62,11 +63,13 @@
   fill: var(--bg-raised);
   stroke: var(--border-strong);
   stroke-width: 2;
-  transition: fill 0.12s ease, stroke 0.12s ease;
+  transition:
+    fill 0.12s ease,
+    stroke 0.12s ease;
 }
 
 .node text,
-.selected text,
+.pending text,
 .frontier text,
 .visited text,
 .active text,
@@ -78,9 +81,46 @@
   pointer-events: none;
 }
 
-.selected circle {
-  stroke: var(--accent);
-  stroke-dasharray: 4 3;
+/*
+ * Half-finished actions are drawn in the compare yellow, on the canvas, next
+ * to the thing they are about. They used to be a bolded sentence in a
+ * paragraph above the graph, which meant looking away from the node you had
+ * just clicked to find out what the app was waiting for.
+ */
+.pending circle {
+  stroke: var(--v-compare);
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.pendingEdge line {
+  stroke: var(--v-compare);
+  stroke-width: 4;
+}
+
+.pendingEdge text {
+  fill: var(--v-compare);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.pendingCaption {
+  fill: var(--v-compare);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.draggable {
+  cursor: grab;
+}
+
+.draggable:active {
+  cursor: grabbing;
 }
 
 .frontier circle {
@@ -112,6 +152,7 @@
 }
 
 .dist {
-  fill: var(--accent) !important;
-  font-size: 10px !important;
+  fill: var(--accent-soft) !important;
+  font-size: 11px !important;
+  font-weight: 800;
 }
