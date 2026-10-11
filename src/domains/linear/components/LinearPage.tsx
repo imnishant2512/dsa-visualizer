@@ -21,7 +21,8 @@ const TABS: Array<{ variant: LinearVariant; label: string; blurb: string }> = [
   {
     variant: 'array',
     label: 'Array',
-    blurb: 'Random access is O(1), but inserting or removing in the middle shifts everything after it.',
+    blurb:
+      'Random access is O(1), but inserting or removing in the middle shifts everything after it.',
   },
   {
     variant: 'stack',
@@ -31,12 +32,14 @@ const TABS: Array<{ variant: LinearVariant; label: string; blurb: string }> = [
   {
     variant: 'queue',
     label: 'Queue',
-    blurb: 'First in, first out. Backed by a plain array, dequeue costs O(n) because the rest shifts left.',
+    blurb:
+      'First in, first out. Backed by a plain array, dequeue costs O(n) because the rest shifts left.',
   },
   {
     variant: 'linked-list',
     label: 'Linked list',
-    blurb: 'Inserting at the head is O(1), but reaching any other position means walking the chain.',
+    blurb:
+      'Inserting at the head is O(1), but reaching any other position means walking the chain.',
   },
 ];
 
@@ -85,7 +88,9 @@ export function LinearPage() {
   });
 
   const controller = isList ? list : seq;
-  const operations = isList ? LIST_OPERATIONS : SEQ_OPERATIONS[variant as 'array' | 'stack' | 'queue'];
+  const operations = isList
+    ? LIST_OPERATIONS
+    : SEQ_OPERATIONS[variant as 'array' | 'stack' | 'queue'];
 
   const args: OpArgs = useMemo(() => ({ value, index }), [value, index]);
 
@@ -136,7 +141,6 @@ export function LinearPage() {
   // Only the array exposes positional operations; everything else works at the ends.
   const needsIndex = variant === 'array';
   const indexOutOfRange = needsIndex && (index < 0 || index > seq.pendingStructure.items.length);
-
 
   const activeSteps = controller.active?.steps ?? NO_STEPS;
   const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);

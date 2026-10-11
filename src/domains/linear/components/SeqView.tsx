@@ -25,7 +25,10 @@ export function SeqView({ state, currentStep, variant }: SeqViewProps) {
     if (state.foundIndex === index) classes.push(styles.found);
     else if (touched === index && currentStep?.kind === 'compare') classes.push(styles.compare);
     else if (touched === index && currentStep?.kind === 'read') classes.push(styles.read);
-    else if (touched === index && (currentStep?.kind === 'insertAt' || currentStep?.kind === 'removeAt'))
+    else if (
+      touched === index &&
+      (currentStep?.kind === 'insertAt' || currentStep?.kind === 'removeAt')
+    )
       classes.push(styles.write);
     else if (state.pointer === index) classes.push(styles.pointer);
     return classes.join(' ');

@@ -15,7 +15,11 @@ interface EditorStubProps {
 
 vi.mock('@monaco-editor/react', () => ({
   default: ({ value, path, onChange }: EditorStubProps) => (
-    <textarea aria-label={path} value={value} onChange={(event) => onChange?.(event.target.value)} />
+    <textarea
+      aria-label={path}
+      value={value}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
   ),
   useMonaco: () => null,
 }));
@@ -60,7 +64,9 @@ describe('Scratchpad', () => {
 
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'javascript' } });
     await waitFor(() =>
-      expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toBe('console.log(1);'),
+      expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toBe(
+        'console.log(1);',
+      ),
     );
   });
 
@@ -76,7 +82,10 @@ describe('Scratchpad', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => ({ status: '1', compiler_error: "prog.cc:3:5: error: 'x' was not declared" }),
+        json: async () => ({
+          status: '1',
+          compiler_error: "prog.cc:3:5: error: 'x' was not declared",
+        }),
       }),
     );
 
@@ -144,7 +153,9 @@ describe('Scratchpad', () => {
     const { unmount } = render(<Scratchpad />);
     fireEvent.change(screen.getByLabelText('main.js'), { target: { value: 'remembered' } });
 
-    await waitFor(() => expect(window.localStorage.getItem('dsa-visualizer:ide-code')).toContain('remembered'));
+    await waitFor(() =>
+      expect(window.localStorage.getItem('dsa-visualizer:ide-code')).toContain('remembered'),
+    );
     unmount();
 
     render(<Scratchpad />);
@@ -154,6 +165,8 @@ describe('Scratchpad', () => {
   it('falls back to the templates when stored drafts are unreadable', () => {
     window.localStorage.setItem('dsa-visualizer:ide-code', 'not json');
     render(<Scratchpad />);
-    expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toContain('Hello, World!');
+    expect((screen.getByLabelText('main.js') as HTMLTextAreaElement).value).toContain(
+      'Hello, World!',
+    );
   });
 });

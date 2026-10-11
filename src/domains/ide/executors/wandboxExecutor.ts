@@ -13,7 +13,8 @@ interface WandboxResponse {
   program_error?: string;
 }
 
-const join = (parts: (string | undefined)[]) => parts.filter(Boolean).join('\n').replace(/\n+$/, '');
+const join = (parts: (string | undefined)[]) =>
+  parts.filter(Boolean).join('\n').replace(/\n+$/, '');
 
 /**
  * Compiles and runs a snippet on wandbox.org.

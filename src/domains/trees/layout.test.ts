@@ -21,10 +21,7 @@ const n = (value: number, leftId: string | null = null, rightId: string | null =
 
 describe('layoutTree', () => {
   it('places every node, including one nothing points at', () => {
-    const attached = tree(
-      { a: n(20, 'b', 'c'), b: n(10), c: n(30) },
-      'a',
-    );
+    const attached = tree({ a: n(20, 'b', 'c'), b: n(10), c: n(30) }, 'a');
     // The middle of a right-rotation: a's left pointer has been cleared, so b
     // is unreferenced for a step.
     const midRotation = tree({ a: n(20, null, 'c'), b: n(10), c: n(30) }, 'a');

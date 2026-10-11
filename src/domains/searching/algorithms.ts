@@ -29,12 +29,7 @@ export const linearSearch = defineSearch({
   summary: 'Checks every element left to right. The only search that works on unsorted data.',
   complexity: { time: 'O(n)', space: 'O(1)' },
   requiresSorted: false,
-  pseudocode: [
-    'for i = 0 to n-1',
-    '  if a[i] == target',
-    '    return i',
-    'return not found',
-  ],
+  pseudocode: ['for i = 0 to n-1', '  if a[i] == target', '    return i', 'return not found'],
   *generate(_state, input) {
     const ctx = new SearchCtx(input.values);
     for (let i = 0; i < ctx.values.length; i++) {
@@ -91,7 +86,8 @@ export const binarySearch = defineSearch({
 export const jumpSearch = defineSearch({
   id: 'jump',
   label: 'Jump Search',
-  summary: 'Leaps ahead in √n blocks until it overshoots, then walks back linearly through one block.',
+  summary:
+    'Leaps ahead in √n blocks until it overshoots, then walks back linearly through one block.',
   complexity: { time: 'O(√n)', space: 'O(1)' },
   requiresSorted: true,
   pseudocode: [
@@ -139,7 +135,8 @@ export const jumpSearch = defineSearch({
 export const interpolationSearch = defineSearch({
   id: 'interpolation',
   label: 'Interpolation Search',
-  summary: 'Guesses where the target should be based on its value, not the midpoint. Very fast on uniform data.',
+  summary:
+    'Guesses where the target should be based on its value, not the midpoint. Very fast on uniform data.',
   complexity: { time: 'O(log log n) uniform, O(n) worst', space: 'O(1)' },
   requiresSorted: true,
   pseudocode: [
@@ -158,9 +155,7 @@ export const interpolationSearch = defineSearch({
     while (lo <= hi && input.target >= ctx.at(lo) && input.target <= ctx.at(hi)) {
       const span = ctx.at(hi) - ctx.at(lo);
       const pos =
-        span === 0
-          ? lo
-          : lo + Math.floor(((input.target - ctx.at(lo)) * (hi - lo)) / span);
+        span === 0 ? lo : lo + Math.floor(((input.target - ctx.at(lo)) * (hi - lo)) / span);
       const clamped = Math.max(lo, Math.min(hi, pos));
 
       yield* ctx.probe(clamped, 1);
@@ -246,5 +241,6 @@ export const SEARCH_ALGORITHMS = [
   exponentialSearch,
 ];
 
-export const SEARCH_BY_ID: Record<string, (typeof SEARCH_ALGORITHMS)[number]> =
-  Object.fromEntries(SEARCH_ALGORITHMS.map((a) => [a.id, a]));
+export const SEARCH_BY_ID: Record<string, (typeof SEARCH_ALGORITHMS)[number]> = Object.fromEntries(
+  SEARCH_ALGORITHMS.map((a) => [a.id, a]),
+);

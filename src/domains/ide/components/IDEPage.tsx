@@ -14,7 +14,8 @@ const MODES: Array<{ id: Mode; label: string; blurb: string }> = [
   {
     id: 'scratchpad',
     label: 'Scratchpad',
-    blurb: 'Run code in six languages. JavaScript stays in this tab; the rest compile on wandbox.org.',
+    blurb:
+      'Run code in six languages. JavaScript stays in this tab; the rest compile on wandbox.org.',
   },
 ];
 

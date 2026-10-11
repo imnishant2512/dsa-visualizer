@@ -4,7 +4,7 @@ An interactive visualizer for data structures and algorithms, built with React, 
 
 **Live:** https://sorting-visualization-29fd0.web.app
 
-Every visualization runs on the same replay engine: an algorithm emits discrete, **exactly reversible** steps, and a player walks a cursor through them. That single design decision is what makes it possible to pause anywhere, step *backwards* through an individual comparison, scrub to any point in a run, or change speed mid-animation without restarting — none of which is possible when animation delays are baked into the algorithm itself.
+Every visualization runs on the same replay engine: an algorithm emits discrete, **exactly reversible** steps, and a player walks a cursor through them. That single design decision is what makes it possible to pause anywhere, step _backwards_ through an individual comparison, scrub to any point in a run, or change speed mid-animation without restarting — none of which is possible when animation delays are baked into the algorithm itself.
 
 **Race mode** — two algorithms, one array, one clock. Merge has done 28 comparisons where quicksort has done 53:
 
@@ -20,28 +20,28 @@ Every visualization runs on the same replay engine: an algorithm emits discrete,
 
 ## What's in it
 
-| Domain | Contents |
-| --- | --- |
-| **Sorting** | 17 algorithms, playback controls, live stats, pseudocode panel, side-by-side race mode |
-| **Searching** | Linear, binary, jump, interpolation, exponential |
-| **Pathfinding** | BFS, DFS, Dijkstra, A*, greedy best-first, Bellman-Ford on a grid you draw walls and weights on |
-| **Linear structures** | Array, stack, queue, linked list |
-| **Trees** | BST, AVL with step-through rotations, min/max heaps, four traversals |
-| **Hash tables** | Chaining vs linear probing, collisions, tombstones |
-| **Graphs** | Interactive graph building, BFS/DFS traversal, Dijkstra and A* shortest paths, topological sort, cycle detection, Prim and Kruskal |
-| **Code IDE** | Six languages in a Monaco editor — JavaScript in a sandboxed worker, the rest compiled on Wandbox |
+| Domain                | Contents                                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Sorting**           | 17 algorithms, playback controls, live stats, pseudocode panel, side-by-side race mode                                             |
+| **Searching**         | Linear, binary, jump, interpolation, exponential                                                                                   |
+| **Pathfinding**       | BFS, DFS, Dijkstra, A*, greedy best-first, Bellman-Ford on a grid you draw walls and weights on                                    |
+| **Linear structures** | Array, stack, queue, linked list                                                                                                   |
+| **Trees**             | BST, AVL with step-through rotations, min/max heaps, four traversals                                                               |
+| **Hash tables**       | Chaining vs linear probing, collisions, tombstones                                                                                 |
+| **Graphs**            | Interactive graph building, BFS/DFS traversal, Dijkstra and A* shortest paths, topological sort, cycle detection, Prim and Kruskal |
+| **Code IDE**          | Six languages in a Monaco editor — JavaScript in a sandboxed worker, the rest compiled on Wandbox                                  |
 
 ### Algorithms
 
 **Sorting (17)** — grouped by the machinery they share:
 
-- *Bubble family*: bubble, cocktail shaker, comb, gnome
-- *Insertion family*: insertion, shell
-- *Selection family*: selection, cycle
-- *Divide & conquer*: merge, quick (Lomuto), heap
-- *Hybrids*: Timsort and Introsort, composed from the generators above rather than reimplemented
-- *Non-comparison*: counting, radix (LSD), bucket
-- *For fun*: bogo (size-capped, for obvious reasons)
+- _Bubble family_: bubble, cocktail shaker, comb, gnome
+- _Insertion family_: insertion, shell
+- _Selection family_: selection, cycle
+- _Divide & conquer_: merge, quick (Lomuto), heap
+- _Hybrids_: Timsort and Introsort, composed from the generators above rather than reimplemented
+- _Non-comparison_: counting, radix (LSD), bucket
+- _For fun_: bogo (size-capped, for obvious reasons)
 
 **Searching (5)**: linear, binary, jump, interpolation, exponential.
 
@@ -103,7 +103,7 @@ Two consequences of that invariant worth knowing, because they shaped the design
 
 Sorting, searching and pathfinding are **batch**: configure the input, hit play, and one full run's steps are generated up front and replayed.
 
-Trees, graphs, hash tables and linear structures are **operation mode**: a persistent structure accumulates user-triggered operations. Three things that are easy to conflate stay distinct there — stepping back *inside* the running operation, cancelling an uncommitted operation, and undoing a *committed* one. Both modes drive the same cursor primitives, and `PlaybackControls` takes identical props either way.
+Trees, graphs, hash tables and linear structures are **operation mode**: a persistent structure accumulates user-triggered operations. Three things that are easy to conflate stay distinct there — stepping back _inside_ the running operation, cancelling an uncommitted operation, and undoing a _committed_ one. Both modes drive the same cursor primitives, and `PlaybackControls` takes identical props either way.
 
 ## Running it
 

@@ -206,7 +206,6 @@ export function GraphsPage() {
 
   const runnable = startId !== null && state.nodes[startId] !== undefined;
 
-
   const activeSteps = graph.active?.steps ?? NO_STEPS;
   const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
@@ -278,11 +277,11 @@ export function GraphsPage() {
               onClick={() => perform(operation, {})}
             >
               {/*
-                * This was a ternary over three known ids that fell through to
-                * "A*" for anything else, so the four operations added after it
-                * was written all rendered as "A*". The name now comes from the
-                * operation itself, which cannot go stale.
-                */}
+               * This was a ternary over three known ids that fell through to
+               * "A*" for anything else, so the four operations added after it
+               * was written all rendered as "A*". The name now comes from the
+               * operation itself, which cannot go stale.
+               */}
               {operation.shortLabel ??
                 operation.label({
                   x: 0,
@@ -422,9 +421,9 @@ export function GraphsPage() {
 
       <p className={styles.footnote}>
         Derived weights are the on-screen distance rounded <em>up</em>, so every edge weighs at
-        least its straight line and A*’s estimate can never overestimate — it returns
-        Dijkstra’s route while visiting fewer nodes. A weight set by hand (marked *) can break
-        that, and A* steps aside when it does.
+        least its straight line and A*’s estimate can never overestimate — it returns Dijkstra’s
+        route while visiting fewer nodes. A weight set by hand (marked *) can break that, and A*
+        steps aside when it does.
       </p>
     </div>
   );

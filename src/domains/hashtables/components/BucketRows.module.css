@@ -15,7 +15,9 @@
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .index {

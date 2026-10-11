@@ -202,7 +202,9 @@ describe('SortingPage', () => {
      * unsorted remainder. n(n-1)/2 at n=12 is 66, on any seed and any shape,
      * so this pins the arithmetic rather than approximating it.
      */
-    expect(screen.getByText(/Matches the predicted bound — 66 comparisons against 66\./)).toBeDefined();
+    expect(
+      screen.getByText(/Matches the predicted bound — 66 comparisons against 66\./),
+    ).toBeDefined();
   });
 
   it('compares a non-comparison sort against array accesses, not comparisons', () => {

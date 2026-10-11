@@ -11,14 +11,7 @@
  * `colorForKind` be a formula rather than a table.
  */
 export type VisualKind =
-  | 'compare'
-  | 'swap'
-  | 'write'
-  | 'read'
-  | 'bucket'
-  | 'sorted'
-  | 'found'
-  | 'idle';
+  'compare' | 'swap' | 'write' | 'read' | 'bucket' | 'sorted' | 'found' | 'idle';
 
 /** Lowercase because it renders inside a tag, not as a sentence. */
 export const KIND_LABEL: Record<VisualKind, string> = {

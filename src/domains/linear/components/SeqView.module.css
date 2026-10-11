@@ -91,7 +91,9 @@
   border: 2px solid var(--border-strong);
   font-family: var(--mono);
   font-size: 15px;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .pointer {

@@ -40,7 +40,8 @@ export const selectionSort = defineSort({
 export const cycleSort = defineSort({
   id: 'cycle',
   label: 'Cycle Sort',
-  summary: 'Computes each value’s final rank and rotates cycles into place — the fewest writes of any sort.',
+  summary:
+    'Computes each value’s final rank and rotates cycles into place — the fewest writes of any sort.',
   complexity: { time: 'O(n²)', space: 'O(1)' },
   pseudocode: [
     'for cycleStart = 0 to n-2',

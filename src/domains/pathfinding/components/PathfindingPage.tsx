@@ -71,15 +71,21 @@ export function PathfindingPage() {
       if (index === start || index === end) return;
       if (tool === 'wall') {
         setWalls((prev) => (prev[index] ? prev : prev.map((w, i) => (i === index ? true : w))));
-        setWeights((prev) => (prev[index] === 1 ? prev : prev.map((w, i) => (i === index ? 1 : w))));
+        setWeights((prev) =>
+          prev[index] === 1 ? prev : prev.map((w, i) => (i === index ? 1 : w)),
+        );
       } else if (tool === 'weight') {
         setWalls((prev) => (prev[index] ? prev.map((w, i) => (i === index ? false : w)) : prev));
         setWeights((prev) =>
-          prev[index] === HEAVY_WEIGHT ? prev : prev.map((w, i) => (i === index ? HEAVY_WEIGHT : w)),
+          prev[index] === HEAVY_WEIGHT
+            ? prev
+            : prev.map((w, i) => (i === index ? HEAVY_WEIGHT : w)),
         );
       } else {
         setWalls((prev) => (prev[index] ? prev.map((w, i) => (i === index ? false : w)) : prev));
-        setWeights((prev) => (prev[index] === 1 ? prev : prev.map((w, i) => (i === index ? 1 : w))));
+        setWeights((prev) =>
+          prev[index] === 1 ? prev : prev.map((w, i) => (i === index ? 1 : w)),
+        );
       }
     },
     [tool, start, end],
@@ -187,7 +193,6 @@ export function PathfindingPage() {
       ? 'No route exists between start and end'
       : null;
 
-
   const stepKinds = useMemo(() => stepKindsByName(player.steps), [player.steps]);
   return (
     <div className={styles.page}>
@@ -271,7 +276,11 @@ export function PathfindingPage() {
             <span className={styles.fieldLabel} id="pathfinding-terrain-label">
               Terrain
             </span>
-            <div className={styles.terrain} role="group" aria-labelledby="pathfinding-terrain-label">
+            <div
+              className={styles.terrain}
+              role="group"
+              aria-labelledby="pathfinding-terrain-label"
+            >
               {MAZES.map((maze) => (
                 <button
                   type="button"
@@ -296,9 +305,7 @@ export function PathfindingPage() {
         </div>
       )}
 
-      <Narration
-        tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}
-      >
+      <Narration tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}>
         {narratePathStep(player.currentStep, state)}
       </Narration>
 
@@ -338,9 +345,7 @@ export function PathfindingPage() {
               onKeyCommand={handleKeyCommand}
             />
           </div>
-          {outcome && (
-            <div className={state.found ? styles.found : styles.missing}>{outcome}</div>
-          )}
+          {outcome && <div className={state.found ? styles.found : styles.missing}>{outcome}</div>}
         </div>
 
         <div className={styles.readouts}>

@@ -34,9 +34,7 @@ export function narrateSeqStep(step: SeqStep | null, state: SeqState): string {
     case 'compare':
       return `Compared index ${step.index} (${state.items[step.index]}) against ${step.target}.`;
     case 'pointer':
-      return step.index === null
-        ? 'Released the cursor.'
-        : `Cursor moved to index ${step.index}.`;
+      return step.index === null ? 'Released the cursor.' : `Cursor moved to index ${step.index}.`;
     case 'found':
       return step.index === null ? 'Nothing marked.' : `Found it at index ${step.index}.`;
     case 'note':

@@ -39,7 +39,12 @@ export const arrayInsert: SeqOperation = {
     const at = Math.max(0, Math.min(index, state.items.length));
     // Walking to the insertion point is what makes array inserts O(n).
     for (let i = state.items.length - 1; i >= at; i--) {
-      yield { kind: 'pointer', index: i, prevIndex: i === state.items.length - 1 ? null : i + 1, line: 1 };
+      yield {
+        kind: 'pointer',
+        index: i,
+        prevIndex: i === state.items.length - 1 ? null : i + 1,
+        line: 1,
+      };
     }
     yield { kind: 'insertAt', index: at, value, line: 2 };
     yield { kind: 'pointer', index: null, prevIndex: at < state.items.length ? at : null, line: 2 };
@@ -142,7 +147,12 @@ export const stackPop: SeqOperation = {
   *generate(state) {
     yield* clearMarks(state);
     if (state.items.length === 0) {
-      yield { kind: 'note', note: 'stack underflow — nothing to pop', prevNote: state.note, line: 1 };
+      yield {
+        kind: 'note',
+        note: 'stack underflow — nothing to pop',
+        prevNote: state.note,
+        line: 1,
+      };
       return;
     }
     const top = state.items.length - 1;
@@ -199,7 +209,12 @@ export const queueDequeue: SeqOperation = {
   *generate(state) {
     yield* clearMarks(state);
     if (state.items.length === 0) {
-      yield { kind: 'note', note: 'queue underflow — nothing to dequeue', prevNote: state.note, line: 1 };
+      yield {
+        kind: 'note',
+        note: 'queue underflow — nothing to dequeue',
+        prevNote: state.note,
+        line: 1,
+      };
       return;
     }
     yield { kind: 'pointer', index: 0, prevIndex: null, line: 2 };
@@ -212,7 +227,8 @@ export const queueDequeue: SeqOperation = {
 export const queuePeek: SeqOperation = {
   id: 'front',
   label: () => 'Peek front',
-  refuse: (state) => (state.items.length === 0 ? 'The queue is empty — nothing at the front.' : null),
+  refuse: (state) =>
+    state.items.length === 0 ? 'The queue is empty — nothing at the front.' : null,
   readOnly: true,
   pseudocode: ['front():', '  return the first value without removing it'],
   *generate(state) {

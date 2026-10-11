@@ -40,6 +40,9 @@ export async function counter(page: Page): Promise<{ at: number; total: number }
       .filter({ hasText: /^[\d,]+ \/ [\d,]+$/ })
       .first()
       .textContent()) ?? '';
-  const [at, total] = text.replace(/,/g, '').split('/').map((part) => Number(part.trim()));
+  const [at, total] = text
+    .replace(/,/g, '')
+    .split('/')
+    .map((part) => Number(part.trim()));
   return { at, total };
 }

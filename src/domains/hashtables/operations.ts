@@ -65,7 +65,13 @@ export const hashInsert: HashOperation = {
     for (let attempt = 0; attempt < state.size; attempt++) {
       const bucket = (home + attempt) % state.size;
       if (attempt > 0) {
-        yield { kind: 'probe', bucket, attempt, prevCursor: (home + attempt - 1) % state.size, line: 3 };
+        yield {
+          kind: 'probe',
+          bucket,
+          attempt,
+          prevCursor: (home + attempt - 1) % state.size,
+          line: 3,
+        };
       }
       const slot = state.buckets[bucket][0];
 
@@ -127,7 +133,13 @@ export const hashLookup: HashOperation = {
     for (let attempt = 0; attempt < state.size; attempt++) {
       const bucket = (home + attempt) % state.size;
       if (attempt > 0) {
-        yield { kind: 'probe', bucket, attempt, prevCursor: (home + attempt - 1) % state.size, line: 2 };
+        yield {
+          kind: 'probe',
+          bucket,
+          attempt,
+          prevCursor: (home + attempt - 1) % state.size,
+          line: 2,
+        };
       }
       const slot = state.buckets[bucket][0];
       if (slot === undefined) break;
@@ -171,7 +183,13 @@ export const hashRemove: HashOperation = {
     for (let attempt = 0; attempt < state.size; attempt++) {
       const bucket = (home + attempt) % state.size;
       if (attempt > 0) {
-        yield { kind: 'probe', bucket, attempt, prevCursor: (home + attempt - 1) % state.size, line: 1 };
+        yield {
+          kind: 'probe',
+          bucket,
+          attempt,
+          prevCursor: (home + attempt - 1) % state.size,
+          line: 1,
+        };
       }
       const slot = state.buckets[bucket][0];
       if (slot === undefined) break;

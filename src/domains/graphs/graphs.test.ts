@@ -91,9 +91,7 @@ describe('graph editing', () => {
     let state = sampleGraph();
     state = run(state, removeNode, { nodeId: 'g0' });
     expect(state.nodes.g0).toBeUndefined();
-    expect(
-      Object.values(state.edges).some((e) => e.from === 'g0' || e.to === 'g0'),
-    ).toBe(false);
+    expect(Object.values(state.edges).some((e) => e.from === 'g0' || e.to === 'g0')).toBe(false);
   });
 
   it('removes a single edge without touching its nodes', () => {
@@ -316,9 +314,7 @@ describe('editing weights and positions', () => {
 
     expect(state.nodes.g0).toMatchObject(far);
     expect(state.edges[manual].weight).toBe(20);
-    expect(state.edges[derived].weight).toBe(
-      weightBetween(state.nodes.g0, state.nodes.g1),
-    );
+    expect(state.edges[derived].weight).toBe(weightBetween(state.nodes.g0, state.nodes.g1));
     // Moving never breaks admissibility on its own — only a manual weight can.
     expect(heuristicViolation(state)).toBeNull();
   });

@@ -27,14 +27,14 @@ main ────●────────●───────────
 
 `<type>/<short-kebab-description>`
 
-| Prefix      | For                                                        |
-| ----------- | ---------------------------------------------------------- |
-| `feat/`     | A new algorithm, domain, or user-facing capability          |
-| `fix/`      | A bug fix                                                   |
-| `refactor/` | Restructuring with no behaviour change                      |
-| `test/`     | Tests only                                                  |
-| `docs/`     | README, this file, comments                                 |
-| `chore/`    | Tooling, dependencies, config, CI                           |
+| Prefix      | For                                                |
+| ----------- | -------------------------------------------------- |
+| `feat/`     | A new algorithm, domain, or user-facing capability |
+| `fix/`      | A bug fix                                          |
+| `refactor/` | Restructuring with no behaviour change             |
+| `test/`     | Tests only                                         |
+| `docs/`     | README, this file, comments                        |
+| `chore/`    | Tooling, dependencies, config, CI                  |
 
 Examples:
 
@@ -56,7 +56,7 @@ Fix the three UX problems: layout, playback speed, keyboard
 Ignore Vite's local cache directory
 ```
 
-Add a body when the *why* is not obvious from the subject. Wrap it at 72
+Add a body when the _why_ is not obvious from the subject. Wrap it at 72
 columns.
 
 ### Merging
@@ -94,7 +94,7 @@ them needs a very good reason.
 
 - **Steps are exactly reversible.** Algorithms emit discrete steps and the
   player walks a cursor through them. Stepping backwards must unwind state
-  *and* stats precisely — never by replaying from the start.
+  _and_ stats precisely — never by replaying from the start.
 - **No animation delays inside algorithms.** Timing belongs to the player.
   An algorithm that sleeps cannot be scrubbed, reversed, or re-sped mid-run.
 - **Colour is never the only signal.** Visualization states use the Okabe-Ito
@@ -111,23 +111,23 @@ The branching rules above are enforced by a ruleset on `main`, configured in
 - Restrict deletions
 - Block force pushes
 - Require a pull request before merging, with **0 required approvals** and
-  *Require conversation resolution before merging* on
-- Require status checks to pass — `verify` — with *Require branches to be up to
-  date before merging* on
+  _Require conversation resolution before merging_ on
+- Require status checks to pass — `verify` — with _Require branches to be up to
+  date before merging_ on
 
 Zero required approvals is deliberate while this is a one-person repo: GitHub
 will not let you approve your own pull request, so requiring one approval would
 mean bypassing the ruleset on every single merge, which is worse than not having
 it. The rule still does the work that matters — no direct pushes to `main`, no
 force pushes, no merging red CI. **When a second collaborator joins, raise
-required approvals to 1** and turn on *Require review from Code Owners* and
-*Dismiss stale pull request approvals when new commits are pushed*; `CODEOWNERS`
+required approvals to 1** and turn on _Require review from Code Owners_ and
+_Dismiss stale pull request approvals when new commits are pushed_; `CODEOWNERS`
 is already in place for that.
 
 Plus, under **Settings → General → Pull Requests**:
 
-- *Allow squash merging* only — merge commits and rebase merging are both
+- _Allow squash merging_ only — merge commits and rebase merging are both
   turned off, so squash is not merely the convention above but the only button
   available. The ruleset also requires linear history, but admins can bypass a
   ruleset and did once; removing the button is what actually holds.
-- *Automatically delete head branches*.
+- _Automatically delete head branches_.

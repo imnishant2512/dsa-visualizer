@@ -46,7 +46,11 @@ export function BucketRows({ state, currentStep }: BucketRowsProps) {
                       ? styles.hitSlot
                       : styles.slot
                 }
-                title={slot.state === 'tombstone' ? 'tombstone — probing must continue past it' : undefined}
+                title={
+                  slot.state === 'tombstone'
+                    ? 'tombstone — probing must continue past it'
+                    : undefined
+                }
               >
                 {slot.state === 'tombstone' ? `✕ ${slot.key}` : slot.key}
               </span>

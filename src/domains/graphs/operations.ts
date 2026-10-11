@@ -409,7 +409,7 @@ export const graphTopologicalSort: GraphOperation = {
     yield* clearMarks(state);
     const inDegree: Record<string, number> = {};
     for (const id of Object.keys(state.nodes)) inDegree[id] = 0;
-    
+
     // Treat edges as directed from `edge.from` to `edge.to`
     for (const edge of Object.values(state.edges)) {
       inDegree[edge.to] = (inDegree[edge.to] || 0) + 1;
@@ -469,7 +469,7 @@ export const graphCycleDetection: GraphOperation = {
   ],
   *generate(state) {
     yield* clearMarks(state);
-    
+
     const color: Record<string, 'white' | 'grey' | 'black'> = {};
     for (const id of Object.keys(state.nodes)) color[id] = 'white';
     let prevPointer: string | null = null;
@@ -478,7 +478,7 @@ export const graphCycleDetection: GraphOperation = {
     function* dfs(id: string, parent: string | null): Generator<GraphStep> {
       color[id] = 'grey';
       yield { kind: 'frontier', id, line: 4 }; // frontier = grey
-      
+
       yield { kind: 'pointer', id, prevId: prevPointer, line: 4 };
       prevPointer = id;
 
@@ -506,7 +506,7 @@ export const graphCycleDetection: GraphOperation = {
         if (cycleFound) break;
       }
     }
-    
+
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 8 };
     if (!cycleFound) {
       yield { kind: 'note', note: 'No cycle found', prevNote: null, line: 8 };
@@ -556,7 +556,7 @@ export const graphPrim: GraphOperation = {
 
       open.delete(best);
       done.add(best);
-      
+
       yield { kind: 'pointer', id: best, prevId: prevPointer, line: 3 };
       prevPointer = best;
       yield { kind: 'visit', id: best, line: 4 };
@@ -582,12 +582,12 @@ export const graphPrim: GraphOperation = {
     }
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 6 };
     yield { kind: 'note', note: `MST Cost: ${mstCost}`, prevNote: null, line: 6 };
-  }
+  },
 };
 
 export const graphKruskal: GraphOperation = {
   id: 'kruskal',
-  label: () => 'Kruskal\'s MST',
+  label: () => "Kruskal's MST",
   shortLabel: "Kruskal's MST",
   readOnly: true,
   pseudocode: [
@@ -639,10 +639,10 @@ export const graphKruskal: GraphOperation = {
         yield { kind: 'visit', id: edge.to, line: 5 };
       }
     }
-    
+
     yield { kind: 'pointer', id: null, prevId: prevPointer, line: 5 };
     yield { kind: 'note', note: `MST Cost: ${mstCost}`, prevNote: null, line: 5 };
-  }
+  },
 };
 
 export const GRAPH_EDIT_OPERATIONS: GraphOperation[] = [

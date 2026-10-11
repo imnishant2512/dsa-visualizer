@@ -69,7 +69,9 @@ export function parseDiagnostics(stderr: string): Diagnostic[] {
     // python: File "main.py", line 5   — the exception follows the traceback.
     match = raw.match(/^\s*File "[^"]*", line (\d+)/);
     if (match) {
-      const message = lines.slice(index + 1).find((line) => /^\s*\w*(Error|Exception)\b/.test(line));
+      const message = lines
+        .slice(index + 1)
+        .find((line) => /^\s*\w*(Error|Exception)\b/.test(line));
       found.push({
         line: Number(match[1]),
         column: 1,

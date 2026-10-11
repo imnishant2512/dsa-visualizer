@@ -16,7 +16,13 @@ describe('recordSort', () => {
     const recording = recordSort(SORT_TEMPLATE, INPUT, STEP_CAP);
     if (!recording.ok) throw new Error(recording.error);
 
-    const end = seek(initial(INPUT), recording.steps, sortEngine, recording.steps.length - 1, SORT_STAT_KEYS);
+    const end = seek(
+      initial(INPUT),
+      recording.steps,
+      sortEngine,
+      recording.steps.length - 1,
+      SORT_STAT_KEYS,
+    );
     expect(end.state.values).toEqual([1, 2, 3, 5, 8, 9]);
     expect(end.state.sorted.every(Boolean)).toBe(true);
     expect(checkSorted(INPUT, end.state.values)).toEqual({ ok: true });
@@ -72,7 +78,10 @@ describe('recordSort', () => {
     const code = `function* customSort(ctx) { yield* ctx.compare(0, ctx.length); }`;
     const recording = recordSort(code, INPUT, STEP_CAP);
     expect(recording.ok).toBe(false);
-    if (!recording.ok) expect(recording.error).toMatch(/compare\(0, 6\): 6 is not an index — valid indices are 0 to 5/);
+    if (!recording.ok)
+      expect(recording.error).toMatch(
+        /compare\(0, 6\): 6 is not an index — valid indices are 0 to 5/,
+      );
   });
 
   it('explains a missing or non-generator customSort', () => {
