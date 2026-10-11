@@ -119,7 +119,9 @@ jobs:
           name: dist
           path: dist/
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # Third-party and handed the deploy credential, so pinned to a commit
+      # (v0.11.0) rather than a tag that could be moved. Dependabot bumps it.
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.11.0
         if: env.HAS_CREDENTIAL == 'true'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -155,7 +157,9 @@ jobs:
           name: dist
           path: dist/
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # Third-party and handed the deploy credential, so pinned to a commit
+      # (v0.11.0) rather than a tag that could be moved. Dependabot bumps it.
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.11.0
         if: env.HAS_CREDENTIAL == 'true'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
