@@ -78,8 +78,3 @@ export function usePlaybackTicker({ playing, speedMs, enabled, onAdvance }: Play
     return () => cancelAnimationFrame(raf);
   }, [playing, enabled, effectiveMs]);
 }
-
-/** Rough wall-clock estimate for a run, used to label the step counter. */
-export function estimateDurationMs(remainingSteps: number, speedMs: number): number {
-  return remainingSteps * speedMs;
-}
