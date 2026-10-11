@@ -41,5 +41,18 @@ export default defineConfig({
      * unchanged; only the deadline is honest about what it is measuring.
      */
     testTimeout: 20000,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/main.tsx', 'src/**/*.d.ts'],
+      reporter: ['text-summary', 'html', 'json-summary'],
+      /*
+       * A floor a few points under what the suite measured when this was set
+       * (83% statements, 73% branches, 76% functions, 84% lines), so CI fails
+       * on a change that drops coverage noticeably, not on noise. Raise it as
+       * coverage grows; never lower it to make a red build green.
+       */
+      thresholds: { statements: 80, branches: 70, functions: 73, lines: 81 },
+    },
   },
 });
