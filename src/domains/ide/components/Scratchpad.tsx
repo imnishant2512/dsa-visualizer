@@ -168,7 +168,9 @@ export function Scratchpad() {
    * exit.
    */
   const failed = Boolean(result && (result.error || (result.exitCode ?? 0) !== 0));
-  const body = result ? [result.stdout, result.stderr, result.error].filter(Boolean).join('\n') : '';
+  const body = result
+    ? [result.stdout, result.stderr, result.error].filter(Boolean).join('\n')
+    : '';
 
   return (
     <div className={css.container}>

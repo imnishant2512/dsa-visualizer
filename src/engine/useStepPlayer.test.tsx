@@ -3,7 +3,12 @@ import { StrictMode, useEffect, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sortEngine } from '../domains/sorting/engine';
 import { SORT_BY_ID } from '../domains/sorting/registry';
-import { SORT_STAT_KEYS, type SortInput, type SortState, type SortStep } from '../domains/sorting/types';
+import {
+  SORT_STAT_KEYS,
+  type SortInput,
+  type SortState,
+  type SortStep,
+} from '../domains/sorting/types';
 import { useStepPlayer, type StepPlayer } from './useStepPlayer';
 
 /**

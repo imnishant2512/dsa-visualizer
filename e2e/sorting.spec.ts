@@ -58,7 +58,10 @@ test.describe('sorting', () => {
       .allTextContents();
     expect(progress).toHaveLength(2);
     for (const text of progress) {
-      const [done, total] = text.replace(/,|steps/g, '').split('/').map(Number);
+      const [done, total] = text
+        .replace(/,|steps/g, '')
+        .split('/')
+        .map(Number);
       expect(done / total).toBeGreaterThan(0.45);
       expect(done / total).toBeLessThan(0.55);
     }

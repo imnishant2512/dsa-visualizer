@@ -9,7 +9,9 @@ test.describe('searching', () => {
 
     await page.getByRole('button', { name: 'In the array', exact: true }).click();
     await seekToEnd(page);
-    await expect(page.getByText(/^Found \d+ at index \d+ — \d+ probes? into 30 values\.$/)).toBeVisible();
+    await expect(
+      page.getByText(/^Found \d+ at index \d+ — \d+ probes? into 30 values\.$/),
+    ).toBeVisible();
   });
 });
 

@@ -40,11 +40,17 @@ function apply<TState, TStep>(
   return current;
 }
 
-const runTree = (state: TreeState, op: (typeof BST_OPERATIONS)[number], args: Partial<TreeArgs> = {}) =>
-  apply(treeEngine, op.generate, state, args);
+const runTree = (
+  state: TreeState,
+  op: (typeof BST_OPERATIONS)[number],
+  args: Partial<TreeArgs> = {},
+) => apply(treeEngine, op.generate, state, args);
 
-const runHeap = (state: HeapState, op: (typeof HEAP_OPERATIONS)[number], args: Partial<TreeArgs> = {}) =>
-  apply(heapEngine, op.generate, state, args);
+const runHeap = (
+  state: HeapState,
+  op: (typeof HEAP_OPERATIONS)[number],
+  args: Partial<TreeArgs> = {},
+) => apply(heapEngine, op.generate, state, args);
 
 /** Every node's left subtree is smaller and right subtree larger. */
 function isValidBst(state: TreeState): boolean {
@@ -194,7 +200,12 @@ describe('traversals', () => {
   });
 
   it('visits every node exactly once', () => {
-    for (const op of [inorderTraversal, preorderTraversal, postorderTraversal, levelorderTraversal]) {
+    for (const op of [
+      inorderTraversal,
+      preorderTraversal,
+      postorderTraversal,
+      levelorderTraversal,
+    ]) {
       const result = runTree(state, op);
       expect(new Set(result.visited).size).toBe(countNodes(state));
     }
@@ -281,16 +292,19 @@ describe('step inversion', () => {
     }
   });
 
-  it.each(HEAP_OPERATIONS.map((op) => [op.id, op] as const))('heap/%s inverts exactly', (_id, op) => {
-    const state = initHeapState([42, 33, 27, 15, 11, 8, 19]);
-    let current = state;
-    for (const step of op.generate(state, { value: 50, min: false })) {
-      const before = structuredClone(current);
-      const after = heapEngine.applyStep(current, step);
-      expect(heapEngine.invertStep(after, step)).toEqual(before);
-      current = after;
-    }
-  });
+  it.each(HEAP_OPERATIONS.map((op) => [op.id, op] as const))(
+    'heap/%s inverts exactly',
+    (_id, op) => {
+      const state = initHeapState([42, 33, 27, 15, 11, 8, 19]);
+      let current = state;
+      for (const step of op.generate(state, { value: 50, min: false })) {
+        const before = structuredClone(current);
+        const after = heapEngine.applyStep(current, step);
+        expect(heapEngine.invertStep(after, step)).toEqual(before);
+        current = after;
+      }
+    },
+  );
 });
 
 describe('pseudocode mapping', () => {

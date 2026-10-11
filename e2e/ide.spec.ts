@@ -84,6 +84,8 @@ test.describe('code IDE', () => {
     await page.goto('/ide');
     await page.getByRole('tab', { name: 'Scratchpad' }).click();
     await page.getByLabel('Language').selectOption('python');
-    await expect(page.getByText(/Compiled on wandbox\.org — your code leaves the browser/)).toBeVisible();
+    await expect(
+      page.getByText(/Compiled on wandbox\.org — your code leaves the browser/),
+    ).toBeVisible();
   });
 });

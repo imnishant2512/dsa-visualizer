@@ -21,8 +21,10 @@ export interface UseStepCursorArgs<TState, TStep> {
   onFinished?: () => void;
 }
 
-export interface UseStepPlayerArgs<TInput, TState, TStep>
-  extends Omit<UseStepCursorArgs<TState, TStep>, 'steps' | 'initialState'> {
+export interface UseStepPlayerArgs<TInput, TState, TStep> extends Omit<
+  UseStepCursorArgs<TState, TStep>,
+  'steps' | 'initialState'
+> {
   def: AlgorithmDefinition<TInput, TState, TStep>;
   input: TInput;
 }

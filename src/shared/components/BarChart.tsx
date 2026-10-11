@@ -2,15 +2,7 @@ import { memo } from 'react';
 import styles from './BarChart.module.css';
 
 export type BarState =
-  | 'idle'
-  | 'compare'
-  | 'swap'
-  | 'write'
-  | 'read'
-  | 'bucket'
-  | 'sorted'
-  | 'found'
-  | 'excluded';
+  'idle' | 'compare' | 'swap' | 'write' | 'read' | 'bucket' | 'sorted' | 'found' | 'excluded';
 
 interface BarChartProps {
   values: number[];

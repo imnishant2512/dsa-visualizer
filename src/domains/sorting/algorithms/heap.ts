@@ -50,7 +50,8 @@ export function* heapSortRange(ctx: SortCtx, lo: number, hi: number): Generator<
 export const heapSort = defineSort({
   id: 'heap',
   label: 'Heap Sort',
-  summary: 'Builds a max-heap in place, then repeatedly swaps the root to the end and re-heapifies.',
+  summary:
+    'Builds a max-heap in place, then repeatedly swaps the root to the end and re-heapifies.',
   complexity: { time: 'O(n log n)', space: 'O(1)' },
   pseudocode: [
     'build max-heap:',

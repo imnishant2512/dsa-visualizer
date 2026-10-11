@@ -54,7 +54,8 @@ export const insertionSort = defineSort({
 export const shellSort = defineSort({
   id: 'shell',
   label: 'Shell Sort',
-  summary: 'Insertion sort over progressively smaller gaps, so values travel far early and little at the end.',
+  summary:
+    'Insertion sort over progressively smaller gaps, so values travel far early and little at the end.',
   complexity: { time: '~O(n^1.3) with this gap sequence', space: 'O(1)' },
   pseudocode: [
     'gap = floor(n / 2)',

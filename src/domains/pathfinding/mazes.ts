@@ -170,8 +170,10 @@ function rooms(spec: MazeSpec): MazeGrid {
   const wallRows: number[] = [];
   for (let r = ROOM_H; r < rows - 1; r += ROOM_H) wallRows.push(r);
 
-  for (const c of wallCols) for (let r = 1; r < rows - 1; r++) grid.walls[toIndex(r, c, cols)] = true;
-  for (const r of wallRows) for (let c = 1; c < cols - 1; c++) grid.walls[toIndex(r, c, cols)] = true;
+  for (const c of wallCols)
+    for (let r = 1; r < rows - 1; r++) grid.walls[toIndex(r, c, cols)] = true;
+  for (const r of wallRows)
+    for (let c = 1; c < cols - 1; c++) grid.walls[toIndex(r, c, cols)] = true;
 
   /** The open spans a wall line is divided into by the perpendicular walls. */
   const spans = (limit: number, dividers: number[]): Array<[number, number]> => {

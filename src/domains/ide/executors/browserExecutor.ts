@@ -95,7 +95,11 @@ export function executeJavaScript(code: string, stdin: string): Promise<Executio
   // page renderable under test without pretending the sandbox exists.
   if (typeof Worker === 'undefined') {
     const result = runUserCode(code, stdin);
-    return Promise.resolve({ ...result, exitCode: result.stderr ? 1 : 0, executionTimeMs: elapsed() });
+    return Promise.resolve({
+      ...result,
+      exitCode: result.stderr ? 1 : 0,
+      executionTimeMs: elapsed(),
+    });
   }
 
   const source = `
@@ -137,7 +141,11 @@ export function executeJavaScript(code: string, stdin: string): Promise<Executio
       finish({ ...event.data, exitCode: event.data.stderr ? 1 : 0 });
 
     worker.onerror = (event) =>
-      finish({ stdout: '', stderr: '', error: event.message || 'The sandbox worker failed to start.' });
+      finish({
+        stdout: '',
+        stderr: '',
+        error: event.message || 'The sandbox worker failed to start.',
+      });
 
     worker.postMessage({ code, stdin });
   });

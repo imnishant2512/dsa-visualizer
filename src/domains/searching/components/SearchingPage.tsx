@@ -154,15 +154,14 @@ export function SearchingPage() {
     onStepForward: handleStepForward,
   });
 
-
   const stepKinds = useMemo(() => stepKindsByName(player.steps), [player.steps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
         <h1>Searching</h1>
         <p>
-          Five search strategies over the same sorted array. Dimmed bars were ruled out without
-          ever being read; blue ones were read on the way.
+          Five search strategies over the same sorted array. Dimmed bars were ruled out without ever
+          being read; blue ones were read on the way.
         </p>
       </header>
 
@@ -288,9 +287,7 @@ export function SearchingPage() {
         stepKinds={stepKinds}
       />
 
-      <Narration
-        tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}
-      >
+      <Narration tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}>
         {narrateSearchStep(player.currentStep, state, target)}
       </Narration>
 

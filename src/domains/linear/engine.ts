@@ -114,7 +114,10 @@ export const listEngine: StepEngine<ListState, ListStep> = {
       case 'setNext':
         return {
           ...state,
-          nodes: { ...state.nodes, [step.id]: { ...state.nodes[step.id], nextId: step.prevNextId } },
+          nodes: {
+            ...state.nodes,
+            [step.id]: { ...state.nodes[step.id], nextId: step.prevNextId },
+          },
         };
       case 'setHead':
         return { ...state, headId: step.prevHeadId };

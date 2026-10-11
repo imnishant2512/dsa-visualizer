@@ -95,7 +95,8 @@ export const bfs = definePath({
 export const dfs = definePath({
   id: 'dfs',
   label: 'Depth-First Search',
-  summary: 'Follows one direction as far as it can before backtracking. Finds *a* route, rarely the shortest.',
+  summary:
+    'Follows one direction as far as it can before backtracking. Finds *a* route, rarely the shortest.',
   complexity: { time: 'O(V + E)', space: 'O(V)' },
   weighted: false,
   pseudocode: [
@@ -197,7 +198,8 @@ function* weightedSearch(
 export const dijkstra = definePath({
   id: 'dijkstra',
   label: "Dijkstra's Algorithm",
-  summary: 'Always expands the cheapest known cell. Handles weighted terrain and guarantees the cheapest route.',
+  summary:
+    'Always expands the cheapest known cell. Handles weighted terrain and guarantees the cheapest route.',
   complexity: { time: 'O(V²) with a scan, O(E log V) with a heap', space: 'O(V)' },
   weighted: true,
   pseudocode: [
@@ -217,7 +219,8 @@ export const dijkstra = definePath({
 export const astar = definePath({
   id: 'astar',
   label: 'A* Search',
-  summary: 'Dijkstra plus a distance-to-goal estimate, so it pushes toward the target instead of expanding evenly.',
+  summary:
+    'Dijkstra plus a distance-to-goal estimate, so it pushes toward the target instead of expanding evenly.',
   complexity: { time: 'O(E log V)', space: 'O(V)' },
   weighted: true,
   pseudocode: [
@@ -237,7 +240,8 @@ export const astar = definePath({
 export const bellmanFord = definePath({
   id: 'bellman-ford',
   label: 'Bellman-Ford',
-  summary: 'Relaxes every edge in the grid, V-1 times over. Slower than Dijkstra, but it copes with negative weights.',
+  summary:
+    'Relaxes every edge in the grid, V-1 times over. Slower than Dijkstra, but it copes with negative weights.',
   complexity: { time: 'O(V · E)', space: 'O(V)' },
   weighted: true,
   pseudocode: [
@@ -297,7 +301,8 @@ export const bellmanFord = definePath({
 export const greedyBestFirst = definePath({
   id: 'greedy-best-first',
   label: 'Greedy Best-First Search',
-  summary: 'Uses only the heuristic (distance to goal) to guide the search. Fast, but not guaranteed to find the shortest path.',
+  summary:
+    'Uses only the heuristic (distance to goal) to guide the search. Fast, but not guaranteed to find the shortest path.',
   complexity: { time: 'O(E log V)', space: 'O(V)' },
   weighted: true,
   pseudocode: [
@@ -361,7 +366,14 @@ export const greedyBestFirst = definePath({
   },
 });
 
-export const PATH_ALGORITHMS: PathAlgorithm[] = [bfs, dfs, dijkstra, astar, greedyBestFirst, bellmanFord];
+export const PATH_ALGORITHMS: PathAlgorithm[] = [
+  bfs,
+  dfs,
+  dijkstra,
+  astar,
+  greedyBestFirst,
+  bellmanFord,
+];
 
 export const PATH_BY_ID: Record<string, PathAlgorithm> = Object.fromEntries(
   PATH_ALGORITHMS.map((a) => [a.id, a]),

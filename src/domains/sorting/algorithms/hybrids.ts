@@ -15,7 +15,8 @@ import { partitionLomuto } from './quick';
 export const timSort = defineSort({
   id: 'tim',
   label: 'Timsort (simplified)',
-  summary: 'Insertion-sorts small runs, then merges them pairwise — the strategy behind Python and Java sorts.',
+  summary:
+    'Insertion-sorts small runs, then merges them pairwise — the strategy behind Python and Java sorts.',
   complexity: { time: 'O(n log n), O(n) on sorted input', space: 'O(n)' },
   pseudocode: [
     'RUN = small block size',
@@ -59,7 +60,8 @@ export const timSort = defineSort({
 export const introSort = defineSort({
   id: 'intro',
   label: 'Introsort (simplified)',
-  summary: 'Quicksort that switches to heapsort when recursion runs too deep and to insertion sort when ranges get small — C++ std::sort’s strategy.',
+  summary:
+    'Quicksort that switches to heapsort when recursion runs too deep and to insertion sort when ranges get small — C++ std::sort’s strategy.',
   complexity: { time: 'O(n log n) guaranteed', space: 'O(log n)' },
   pseudocode: [
     'introSort(lo, hi, depthLimit):',

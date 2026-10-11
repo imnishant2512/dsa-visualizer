@@ -23,17 +23,20 @@ export const DOMAINS: DomainMeta[] = [
   {
     path: '/sorting',
     label: 'Sorting',
-    blurb: 'Seven families, a measured-against-predicted verdict, and a race mode that puts two on one clock.',
+    blurb:
+      'Seven families, a measured-against-predicted verdict, and a race mode that puts two on one clock.',
   },
   {
     path: '/searching',
     label: 'Searching',
-    blurb: 'Watch the candidate window close — and see which values were ruled out without being read.',
+    blurb:
+      'Watch the candidate window close — and see which values were ruled out without being read.',
   },
   {
     path: '/pathfinding',
     label: 'Pathfinding',
-    blurb: 'Draw walls and heavy terrain, or pick a maze, then send BFS, Dijkstra or A* through it.',
+    blurb:
+      'Draw walls and heavy terrain, or pick a maze, then send BFS, Dijkstra or A* through it.',
   },
   {
     path: '/linear/array',

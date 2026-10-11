@@ -118,8 +118,7 @@ export function GraphSvg({
   const continueDrag = (event: PointerEvent<SVGGElement>) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const { x, y } = toLocal(event.clientX, event.clientY);
-    const moved =
-      drag.moved || Math.hypot(x - drag.originX, y - drag.originY) > DRAG_THRESHOLD;
+    const moved = drag.moved || Math.hypot(x - drag.originX, y - drag.originY) > DRAG_THRESHOLD;
     setDrag({ ...drag, x, y, moved });
   };
 
@@ -153,7 +152,14 @@ export function GraphSvg({
         role="img"
         aria-label="Graph"
       >
-        <rect x={0} y={0} width={width} height={height} fill="transparent" onClick={handleBackground} />
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill="transparent"
+          onClick={handleBackground}
+        />
 
         {Object.entries(state.edges).map(([id, edge]) => {
           const a = positionOf(edge.from);
@@ -213,7 +219,12 @@ export function GraphSvg({
                 {state.nodes[id].label}
               </text>
               {state.dist[id] !== undefined && Number.isFinite(state.dist[id]) && (
-                <text x={node.x} y={node.y - NODE_R - 5} textAnchor="middle" className={styles.dist}>
+                <text
+                  x={node.x}
+                  y={node.y - NODE_R - 5}
+                  textAnchor="middle"
+                  className={styles.dist}
+                >
                   {state.dist[id]}
                 </text>
               )}

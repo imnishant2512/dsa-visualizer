@@ -17,8 +17,7 @@ export function checkSorted(input: readonly number[], output: readonly number[])
   if (!sameValues) {
     return {
       ok: false,
-      reason:
-        'The output is not a rearrangement of the input — a write added or lost a value.',
+      reason: 'The output is not a rearrangement of the input — a write added or lost a value.',
     };
   }
 

@@ -66,7 +66,7 @@ function verdictFor(
     ratio < 0.5
       ? `Beat the bound — ${Math.round((1 - ratio) * 100)}% fewer ${noun} than predicted.`
       : ratio > 2
-        ? `Over the bound — ${(ratio).toFixed(1)}× the predicted ${noun} on this input shape.`
+        ? `Over the bound — ${ratio.toFixed(1)}× the predicted ${noun} on this input shape.`
         : `Matches the predicted bound — ${measured.toLocaleString()} ${noun} against ${predicted.toLocaleString()}.`;
   return { predicted, noun, text };
 }

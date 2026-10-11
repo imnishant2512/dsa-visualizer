@@ -61,8 +61,7 @@ export function TreeSvg({ state, currentStep, showBalance = false, zoom = 1 }: T
             const from = positionOf(id);
             const to = childId ? positionOf(childId) : undefined;
             if (!from || !to || !childId) return null;
-            const isRewriting =
-              rewriting?.parentId === id && rewriting.childId === childId;
+            const isRewriting = rewriting?.parentId === id && rewriting.childId === childId;
             return (
               <line
                 key={`${id}-${key}`}
