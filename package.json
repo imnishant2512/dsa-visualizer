@@ -1,7 +1,7 @@
 {
   "name": "dsa-visualizer",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Interactive visualizer for data structures and algorithms on one exactly-reversible replay engine.",
   "license": "MIT",
   "type": "module",
