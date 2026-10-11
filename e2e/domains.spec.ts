@@ -27,6 +27,9 @@ test.describe('pathfinding', () => {
 
   test('paints walls by dragging the pointer across the grid', async ({ page }) => {
     await page.goto('/pathfinding');
+    // count() does not wait, so wait for the grid first or a page still
+    // loading its chunk reads as zero walls.
+    await expect(page.getByRole('application')).toBeVisible();
     const walls = page.locator('[class*="_wall_"]');
     const before = await walls.count();
 

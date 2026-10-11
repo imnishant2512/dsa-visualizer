@@ -16,8 +16,13 @@ test.describe('sorting', () => {
 
   test('steps backwards to exactly where it started', async ({ page }) => {
     await page.goto('/sorting?algo=bubble&size=10&shape=random&seed=5');
-    const bars = page.locator('[class*="_bar_"]');
+    // The chart's direct children are the slots, and a slot's height is its
+    // value. Waiting for all ten also waits out the page's lazy chunk, which
+    // evaluateAll alone would not.
+    const bars = page.getByRole('img', { name: 'Array of 10 values' }).locator(':scope > div');
+    await expect(bars).toHaveCount(10);
     const before = await bars.evaluateAll((els) => els.map((e) => (e as HTMLElement).style.height));
+    expect(new Set(before).size).toBeGreaterThan(1);
 
     for (let i = 0; i < 12; i++) await page.getByRole('button', { name: 'Step forward' }).click();
     expect((await counter(page)).at).toBe(12);
