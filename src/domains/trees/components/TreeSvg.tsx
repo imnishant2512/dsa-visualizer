@@ -1,4 +1,4 @@
-import { NODE_RADIUS, Y_SPACING, balanceOf, layoutTree } from '../layout';
+import { NODE_RADIUS, balanceOf, layoutTree } from '../layout';
 import type { TreeState, TreeStep } from '../types';
 import styles from './TreeSvg.module.css';
 
@@ -105,6 +105,3 @@ export function TreeSvg({ state, currentStep, showBalance = false, zoom = 1 }: T
     </div>
   );
 }
-
-/** Exported for the page's empty-state height reservation. */
-export const TREE_ROW_HEIGHT = Y_SPACING;
