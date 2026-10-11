@@ -1,19 +1,33 @@
-import { NODE_RADIUS, X_SPACING, Y_SPACING, layoutTree } from '../layout';
+import { NODE_RADIUS, Y_SPACING, balanceOf, layoutTree } from '../layout';
 import type { TreeState, TreeStep } from '../types';
 import styles from './TreeSvg.module.css';
 
 interface TreeSvgProps {
   state: TreeState;
   currentStep: TreeStep | null;
+  /** AVL work turns on the balance factor, so it is shown while that runs. */
+  showBalance?: boolean;
+  /** 0.7–1.6. Fifteen nodes need about 700px of width in a 220px box. */
+  zoom?: number;
 }
 
-export function TreeSvg({ state, currentStep }: TreeSvgProps) {
+type Point = { x: number; y: number };
+
+export function TreeSvg({ state, currentStep, showBalance = false, zoom = 1 }: TreeSvgProps) {
   const layout = layoutTree(state);
   const comparing = currentStep?.kind === 'compare' ? currentStep.id : null;
   const visitedSet = new Set(state.visited);
 
-  const detachedY = layout.height + 18;
-  const height = layout.detached.length > 0 ? detachedY + Y_SPACING : layout.height;
+  // Every node is laid out, attached or not — see `layoutTree`.
+  const positionOf = (id: string): Point | undefined => layout.positions[id];
+
+  const detachedSet = new Set(layout.detached);
+
+  /** The edge this step is rewriting, drawn in the accent while it happens. */
+  const rewriting =
+    currentStep?.kind === 'link'
+      ? { parentId: currentStep.parentId, childId: currentStep.childId ?? currentStep.prevChildId }
+      : null;
 
   const classFor = (id: string) => {
     if (state.foundId === id) return styles.found;
@@ -23,6 +37,9 @@ export function TreeSvg({ state, currentStep }: TreeSvgProps) {
     return styles.node;
   };
 
+  const height = Math.max(layout.height, 120);
+  const width = Math.max(layout.width, 320);
+
   return (
     <div className={styles.wrap}>
       {state.rootId === null && layout.detached.length === 0 && (
@@ -31,9 +48,9 @@ export function TreeSvg({ state, currentStep }: TreeSvgProps) {
 
       <svg
         className={styles.svg}
-        viewBox={`0 0 ${Math.max(layout.width, 320)} ${Math.max(height, 120)}`}
-        width={Math.max(layout.width, 320)}
-        height={Math.max(height, 120)}
+        viewBox={`0 0 ${width} ${height}`}
+        width={width * zoom}
+        height={height * zoom}
         role="img"
         aria-label="Tree diagram"
       >
@@ -41,9 +58,11 @@ export function TreeSvg({ state, currentStep }: TreeSvgProps) {
         {Object.entries(state.nodes).map(([id, node]) =>
           (['leftId', 'rightId'] as const).map((key) => {
             const childId = node[key];
-            const from = layout.positions[id];
-            const to = childId ? layout.positions[childId] : undefined;
-            if (!from || !to) return null;
+            const from = positionOf(id);
+            const to = childId ? positionOf(childId) : undefined;
+            if (!from || !to || !childId) return null;
+            const isRewriting =
+              rewriting?.parentId === id && rewriting.childId === childId;
             return (
               <line
                 key={`${id}-${key}`}
@@ -51,38 +70,41 @@ export function TreeSvg({ state, currentStep }: TreeSvgProps) {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                className={styles.edge}
+                className={`${styles.edge} ${isRewriting ? styles.edgeRewriting : ''} ${
+                  detachedSet.has(childId) ? styles.edgeDetached : ''
+                }`}
               />
             );
           }),
         )}
 
-        {Object.entries(layout.positions).map(([id, pos]) => (
-          <g key={id} className={classFor(id)}>
-            <circle cx={pos.x} cy={pos.y} r={NODE_RADIUS} />
-            <text x={pos.x} y={pos.y + 4} textAnchor="middle">
-              {state.nodes[id].value}
-            </text>
-          </g>
-        ))}
-
-        {/* A rotation detaches a subtree for a step or two — show it rather than
-            letting nodes blink out of existence. */}
-        {layout.detached.map((id, i) => (
-          <g key={id} className={`${classFor(id)} ${styles.detached}`}>
-            <circle cx={i * X_SPACING + NODE_RADIUS + 8} cy={detachedY} r={NODE_RADIUS} />
-            <text x={i * X_SPACING + NODE_RADIUS + 8} y={detachedY + 4} textAnchor="middle">
-              {state.nodes[id].value}
-            </text>
-          </g>
-        ))}
-
-        {layout.detached.length > 0 && (
-          <text x={4} y={detachedY - 22} className={styles.detachedLabel}>
-            detached mid-rotation
-          </text>
-        )}
+        {Object.keys(state.nodes).map((id) => {
+          const pos = positionOf(id);
+          if (!pos) return null;
+          const detached = detachedSet.has(id);
+          const balance = showBalance && !detached ? balanceOf(state, id) : null;
+          return (
+            <g key={id} className={`${classFor(id)} ${detached ? styles.detached : ''}`}>
+              <circle cx={pos.x} cy={pos.y} r={NODE_RADIUS} />
+              <text x={pos.x} y={pos.y + 4} textAnchor="middle">
+                {state.nodes[id].value}
+              </text>
+              {balance !== null && (
+                <text
+                  x={pos.x + NODE_RADIUS + 2}
+                  y={pos.y - NODE_RADIUS + 4}
+                  className={Math.abs(balance) > 1 ? styles.balanceBad : styles.balance}
+                >
+                  {balance > 0 ? `+${balance}` : balance}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
 }
+
+/** Exported for the page's empty-state height reservation. */
+export const TREE_ROW_HEIGHT = Y_SPACING;

@@ -1,7 +1,15 @@
 import { useEffect, useRef } from 'react';
+import { usePrefersReducedMotion } from '../shared/hooks/usePrefersReducedMotion';
 
 /** Never apply more than this many steps in a single frame, so the tab stays responsive. */
 const MAX_STEPS_PER_FRAME = 400;
+
+/**
+ * Slowest the run may go when the reader has asked for reduced motion. Five
+ * repaints a second still animates, but it stops the chart strobing at 80
+ * frames a second — which is what `speedMs: 12` produces at the 4x preset.
+ */
+export const REDUCED_MOTION_MIN_MS = 200;
 
 export interface PlaybackTickerArgs {
   playing: boolean;
@@ -24,6 +32,12 @@ export interface PlaybackTickerArgs {
  * `speedMs`) while letting fast speeds run at thousands of steps a second.
  */
 export function usePlaybackTicker({ playing, speedMs, enabled, onAdvance }: PlaybackTickerArgs) {
+  // The floor is applied here rather than at the speed control, so it covers
+  // batch mode, operation mode and any future caller from one place — and so
+  // the user's chosen speed is still what comes back out of the URL.
+  const reducedMotion = usePrefersReducedMotion();
+  const effectiveMs = reducedMotion ? Math.max(speedMs, REDUCED_MOTION_MIN_MS) : speedMs;
+
   // Kept in a ref so a new callback identity each render doesn't restart the loop.
   const onAdvanceRef = useRef(onAdvance);
   useEffect(() => {
@@ -52,9 +66,9 @@ export function usePlaybackTicker({ playing, speedMs, enabled, onAdvance }: Play
       // the tab doesn't jump the run forward by thousands of steps at once.
       accumulator += Math.max(0, Math.min(delta, 250));
 
-      const due = Math.floor(accumulator / Math.max(speedMs, 0.5));
+      const due = Math.floor(accumulator / Math.max(effectiveMs, 0.5));
       if (due > 0) {
-        accumulator -= due * Math.max(speedMs, 0.5);
+        accumulator -= due * Math.max(effectiveMs, 0.5);
         onAdvanceRef.current(Math.min(due, MAX_STEPS_PER_FRAME));
       }
       raf = requestAnimationFrame(frame);
@@ -62,7 +76,7 @@ export function usePlaybackTicker({ playing, speedMs, enabled, onAdvance }: Play
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [playing, enabled, speedMs]);
+  }, [playing, enabled, effectiveMs]);
 }
 
 /** Rough wall-clock estimate for a run, used to label the step counter. */

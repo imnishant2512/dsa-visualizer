@@ -114,9 +114,14 @@ npm install
 npm run dev       # dev server at localhost:5173
 npm run build     # typecheck + production build
 npm run preview   # serve the production build
-npm run test      # vitest
+npm run test      # vitest — unit and component tests
+npm run test:e2e  # build, then run the end-to-end suite in Chrome
 npm run lint      # eslint
 ```
+
+The end-to-end suite drives the Google Chrome already installed on the
+machine (Playwright's `chrome` channel), so it needs Chrome but no separate
+browser download.
 
 ## Deploying
 
@@ -151,7 +156,19 @@ loading an old page that points at asset hashes the deploy no longer has.
 
 ## Tests
 
-480 tests covering:
+Two suites, which cover different things.
+
+**End-to-end** (`e2e/`, 36 tests) runs real Chrome against the production
+build. It is where the parts jsdom only simulates are exercised for real: the
+Web Worker that sandboxes user code (on the minified bundle, since the IDE
+stringifies functions into workers), layout and visibility, pointer and
+keyboard input on the pathfinding grid, and the real playback clock. Every
+test also fails if the page throws or logs an error. It found three defects
+the unit suite could not: mistyped URLs silently showing the homepage, the
+nav losing its highlight on three of the four linear-structure tabs, and a
+missing favicon.
+
+**Unit and component** (`src/`, 592 tests) covering:
 
 - the pages themselves — URL round-tripping, the bogo size cap, playback
   stopping on its own, race mode wiring, and the keyboard focus rules. Every

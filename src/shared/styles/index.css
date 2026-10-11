@@ -24,24 +24,40 @@ h1,
 h2,
 h3 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  /* Was 46px. Reduced for density — the page title is not the point of the page. */
+  font-size: 32px;
+  letter-spacing: -0.02em;
+}
+
+/*
+ * The one non-negotiable accessibility rule in the redesign: nothing focusable
+ * may be focusable invisibly. `:focus-visible` rather than `:focus` so a mouse
+ * click doesn't leave a ring behind, while every keyboard path shows one.
+ */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 button {
   font: inherit;
   color: inherit;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-strong);
+  background: none;
+  border: 2px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 6px 12px;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 button:hover:not(:disabled) {
-  background: #1e2634;
   border-color: var(--accent);
+  color: var(--accent-soft);
 }
 
 button:disabled {
@@ -55,7 +71,7 @@ input[type='text'] {
   font: inherit;
   color: inherit;
   background: var(--bg-sunken);
-  border: 1px solid var(--border-strong);
+  border: 2px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 5px 8px;
 }
@@ -66,5 +82,5 @@ input[type='range'] {
 }
 
 a {
-  color: var(--accent);
+  color: var(--accent-soft);
 }

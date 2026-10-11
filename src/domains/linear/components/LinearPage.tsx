@@ -2,7 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { useInteractiveStructure } from '../../../engine/useInteractiveStructure';
 import { OperationHistoryPanel } from '../../../shared/components/OperationHistoryPanel';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { NO_STEPS, stepKindsByName } from '../../../shared/components/stepKinds';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
 import { StatsPanel } from '../../../shared/components/StatsPanel';
@@ -10,6 +11,8 @@ import { SPEED_MS } from '../../../shared/utils/randomArray';
 import { initListState, initSeqState, listEngine, seqEngine } from '../engine';
 import { LIST_OPERATIONS, SEQ_OPERATIONS, type OpArgs } from '../operations';
 import { LINEAR_STAT_KEYS, type LinearVariant } from '../types';
+import { Narration } from '../../../shared/components/Narration';
+import { narrateLinearStep } from '../narrate';
 import { ListView } from './ListView';
 import { SeqView } from './SeqView';
 import styles from './LinearPage.module.css';
@@ -84,11 +87,34 @@ export function LinearPage() {
   const controller = isList ? list : seq;
   const operations = isList ? LIST_OPERATIONS : SEQ_OPERATIONS[variant as 'array' | 'stack' | 'queue'];
 
-  const args: OpArgs = { value, index };
+  const args: OpArgs = useMemo(() => ({ value, index }), [value, index]);
+
+  /*
+   * Why each operation cannot run, checked against the structure as it stands.
+   *
+   * The page used to offer every operation unconditionally, run the impossible
+   * ones, and report the failure afterwards in the same informational blue as
+   * a success — so "Pop" on an empty stack looked like it had worked. Asking
+   * first means the control is honest about what it will do.
+   */
+  const refusals = useMemo(() => {
+    // The structure the next operation will see, which includes whatever is
+    // still animating — `perform` commits that before it generates.
+    const state = isList ? list.pendingStructure : seq.pendingStructure;
+    const reasons = new Map<string, string>();
+    for (const operation of operations) {
+      const reason = (operation as { refuse?: (s: never, a: OpArgs) => string | null }).refuse?.(
+        state as never,
+        args,
+      );
+      if (reason) reasons.set(operation.id, reason);
+    }
+    return reasons;
+  }, [operations, isList, list.pendingStructure, seq.pendingStructure, args]);
 
   const runOperation = (operationId: string) => {
     const operation = operations.find((o) => o.id === operationId);
-    if (!operation) return;
+    if (!operation || refusals.has(operationId)) return;
     // A new operation commits whatever was still in flight, then plays.
     if (isList) list.perform(operation as never, args);
     else seq.perform(operation as never, args);
@@ -109,7 +135,11 @@ export function LinearPage() {
 
   // Only the array exposes positional operations; everything else works at the ends.
   const needsIndex = variant === 'array';
+  const indexOutOfRange = needsIndex && (index < 0 || index > seq.pendingStructure.items.length);
 
+
+  const activeSteps = controller.active?.steps ?? NO_STEPS;
+  const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
@@ -152,18 +182,40 @@ export function LinearPage() {
               type="number"
               value={index}
               min={0}
+              max={seq.pendingStructure.items.length}
+              aria-invalid={indexOutOfRange || undefined}
+              aria-describedby="linear-index-range"
               onChange={(e) => setIndex(Number(e.target.value))}
-              className={styles.number}
+              className={`${styles.number} ${indexOutOfRange ? styles.invalid : ''}`}
             />
+            {/*
+              The valid range, next to the field, rather than a failure message
+              after the fact. It is the same sentence either way — showing it
+              before turns a report into an instruction.
+            */}
+            <span
+              id="linear-index-range"
+              className={indexOutOfRange ? styles.rangeBad : styles.range}
+            >
+              0–{seq.pendingStructure.items.length}
+            </span>
           </label>
         )}
 
         <div className={styles.ops}>
-          {operations.map((operation) => (
-            <button key={operation.id} onClick={() => runOperation(operation.id)}>
-              {operation.label(args)}
-            </button>
-          ))}
+          {operations.map((operation) => {
+            const reason = refusals.get(operation.id);
+            return (
+              <button
+                key={operation.id}
+                onClick={() => runOperation(operation.id)}
+                disabled={Boolean(reason)}
+                title={reason}
+              >
+                {operation.label(args)}
+              </button>
+            );
+          })}
         </div>
 
         <button
@@ -178,7 +230,20 @@ export function LinearPage() {
         </button>
       </div>
 
-      <PlaybackControls
+      {/*
+        A refusal gets its own surface: the reason an operation cannot run is
+        not the same kind of message as a report of one that did.
+      */}
+      <Narration
+        tag={controller.active ? `Step ${Math.max(0, controller.frame.cursor + 1)}` : 'Ready'}
+        tone={controller.displayState.note ? 'refusal' : 'neutral'}
+      >
+        {controller.displayState.note ??
+          narrateLinearStep(controller.currentStep, controller.displayState, isList)}
+      </Narration>
+
+      <RunBar
+        summary={controller.active?.label ?? 'No operation running'}
         isPlaying={playing}
         canStepBack={controller.canStepBack}
         canStepForward={controller.canStepForward}
@@ -194,16 +259,33 @@ export function LinearPage() {
           setPlaying(false);
           controller.next();
         }}
-        onReset={() => {
-          setPlaying(false);
-          controller.cancel();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           controller.seekTo(cursor);
         }}
-        resetLabel="Cancel operation"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to the start of this operation',
+            disabled: !controller.active,
+            onClick: () => {
+              setPlaying(false);
+              controller.seekTo(-1);
+            },
+          },
+          {
+            label: 'Cancel operation',
+            title: 'Drop the operation in flight — the structure is left untouched',
+            disabled: !controller.active,
+            danger: true,
+            onClick: () => {
+              setPlaying(false);
+              controller.cancel();
+            },
+          },
+        ]}
+        stepKinds={stepKinds}
       />
 
       <div className={styles.workspace}>
