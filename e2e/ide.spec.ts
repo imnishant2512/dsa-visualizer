@@ -29,8 +29,8 @@ test.describe('code IDE', () => {
     const editor = page.locator('.monaco-editor');
     await expect(editor).toBeVisible({ timeout: 15_000 });
     await expect(editor).toContainText('customSort');
-    // Monaco is bundled, and the only third-party request is the web font.
-    expect(external.filter((url) => !url.includes('fonts.g'))).toEqual([]);
+    // Monaco and the web font are both bundled: nothing comes from another origin.
+    expect(external).toEqual([]);
   });
 
   test('records the template in a worker and replays it', async ({ page }) => {
