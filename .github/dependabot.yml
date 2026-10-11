@@ -1,0 +1,32 @@
+# Weekly dependency updates, grouped so they arrive as a few reviewable PRs
+# rather than one per package. CI runs on each, so a green Dependabot PR has
+# passed the same checks as any other change.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'Bump'
+    groups:
+      # Patch and minor updates of dev tooling: low risk, one PR.
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+      # Runtime packages ship to users, so they stay separate from tooling.
+      runtime:
+        dependency-type: production
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'Bump'
+    groups:
+      actions:
+        patterns: ['*']
