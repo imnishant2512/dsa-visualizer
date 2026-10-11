@@ -15,10 +15,12 @@
 
 ## Checklist
 
-- [ ] `npm run lint` passes
-- [ ] `npm test` passes
-- [ ] `npm run build` passes (this is also the typecheck)
+- [ ] `npm run verify` passes (format, lint, knip, typecheck, tests with coverage, build)
+- [ ] `npm run test:e2e` passes, if the change touches pages, layout, workers or the CSP
 - [ ] New or changed behaviour has a test
 - [ ] Steps stay exactly reversible — stepping backwards unwinds state and stats
 - [ ] Any new visualization state is distinguishable in greyscale, not by hue alone
+- [ ] Text on the accent uses `--accent-fill`; accent-coloured text uses `--accent-soft`
+- [ ] Nothing new is loaded from another origin (or the CSP change is in this PR)
+- [ ] `CHANGELOG.md` has an entry, if a visitor would notice the change
 - [ ] README updated if a feature, algorithm or script changed

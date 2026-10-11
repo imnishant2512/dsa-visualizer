@@ -1,0 +1,25 @@
+name: Feature request
+description: An algorithm, structure or capability the site does not have yet.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What you would like
+      description: An algorithm to add, a control that is missing, a view that would explain something better.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it would let you see or do
+      description: The question it answers, or the misunderstanding it would clear up.
+    validations:
+      required: true
+  - type: checkboxes
+    id: reversible
+    attributes:
+      label: The replay engine
+      description: Every step on this site can be undone exactly. An algorithm proposal has to fit that.
+      options:
+        - label: I have checked that every step of this could be stepped backwards
