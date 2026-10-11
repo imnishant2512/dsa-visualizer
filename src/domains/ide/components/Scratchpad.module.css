@@ -53,7 +53,7 @@
 }
 
 .runBtn {
-  background: var(--accent);
+  background: var(--accent-fill);
   /* Was a dark navy picked for the old sky-blue accent; on vermillion it sat
      at the edge of legibility. The accent's text colour is the light one. */
   color: var(--text);

@@ -32,7 +32,7 @@
 }
 
 .head {
-  color: var(--accent);
+  color: var(--accent-soft);
   border-color: var(--accent);
   border-style: solid;
 }
