@@ -16,14 +16,13 @@
 }
 
 .done {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(0, 158, 115, 0.15);
-  color: var(--v-sorted);
-  font-size: 11px;
-  font-weight: 600;
+  padding: 3px 9px;
+  background: var(--v-sorted);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .summary {
@@ -49,6 +48,44 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/*
+ * Measured against predicted. Only the readout is accent-coloured — the
+ * verdict sentence stays body text so a bad result does not read as an error.
+ */
+.verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.predictedRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.predictedRow code {
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.predicted {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.verdictText {
+  font-size: 12px;
+  color: var(--text-faint);
 }
 
 /* Race mode already splits the page in two, so each panel stacks. */

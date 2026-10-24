@@ -4,8 +4,7 @@
   min-height: 150px;
   padding: 20px 16px;
   background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 2px solid var(--rule);
   overflow-x: auto;
 }
 
@@ -15,9 +14,36 @@
   align-items: flex-start;
 }
 
-/* A stack grows upward, so draw it right-to-left with the top at the end. */
+/*
+ * A stack grows upward, and now actually does.
+ *
+ * This rule used to read `flex-direction: row` under a comment claiming the
+ * opposite, which drew a stack identically to an array — so the one property
+ * that distinguishes the structure, that it only ever grows and shrinks at one
+ * end, was invisible. `column-reverse` builds from a fixed floor, and the
+ * floor is drawn as a rule so the base is a place rather than an absence.
+ */
+.stack {
+  align-items: flex-end;
+  min-height: 260px;
+}
+
 .stack .cells {
-  flex-direction: row;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 4px solid var(--accent);
+}
+
+.stack .base {
+  align-self: flex-end;
+  padding-top: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .slot {
@@ -27,9 +53,31 @@
   gap: 3px;
 }
 
+/* Laid on its side, so index, cell and "top" read across each row. */
+.stack .slot {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.stack .cell {
+  height: 38px;
+  width: 84px;
+}
+
+.stack .end {
+  min-height: 0;
+  width: 3ch;
+}
+
+.stack .index {
+  width: 2ch;
+  text-align: right;
+}
+
 .index {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-faint);
 }
 
@@ -39,9 +87,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
   background: var(--bg-raised);
-  border: 1px solid var(--border-strong);
+  border: 2px solid var(--border-strong);
   font-family: var(--mono);
   font-size: 15px;
   transition: background-color 0.12s ease, border-color 0.12s ease;
@@ -49,7 +96,7 @@
 
 .pointer {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent-tint);
 }
 
 .compare {
@@ -77,15 +124,22 @@
 }
 
 .end {
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent);
-  min-height: 13px;
+  letter-spacing: 0.06em;
+  color: var(--accent-soft);
+  min-height: 15px;
 }
 
 .empty {
   margin: 0;
   color: var(--text-faint);
   font-style: italic;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }

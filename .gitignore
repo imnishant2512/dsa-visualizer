@@ -11,3 +11,8 @@ dist-ssr
 *.local
 .DS_Store
 *.log
+
+# Playwright output: traces, screenshots and reports from end-to-end runs.
+test-results
+playwright-report
+blob-report

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStepPlayer } from '../../../engine/useStepPlayer';
 import { BarChart, type BarState } from '../../../shared/components/BarChart';
-import { PlaybackControls } from '../../../shared/components/PlaybackControls';
+import { RunBar } from '../../../shared/components/RunBar';
+import { stepKindsByName } from '../../../shared/components/stepKinds';
 import { ShareLink } from '../../../shared/components/ShareLink';
 import { usePlaybackKeys } from '../../../shared/hooks/usePlaybackKeys';
 import { PseudocodePanel } from '../../../shared/components/PseudocodePanel';
@@ -11,7 +12,10 @@ import { randomSeed } from '../../../shared/utils/random';
 import { ARRAY_SIZE, SPEED_MS, randomSortedArray } from '../../../shared/utils/randomArray';
 import { SEARCH_ALGORITHMS, SEARCH_BY_ID } from '../algorithms';
 import { searchEngine } from '../engine';
+import { narrateSearchStep } from '../narrate';
+import { pickMissing } from '../targets';
 import { SEARCH_STAT_KEYS } from '../types';
+import { Narration } from '../../../shared/components/Narration';
 import styles from './SearchingPage.module.css';
 
 function readInt(value: string | null): number | null {
@@ -89,13 +93,23 @@ export function SearchingPage() {
   const activeIndex =
     step && (step.kind === 'probe' || step.kind === 'compare') ? step.index : null;
 
+  /*
+   * Probed bars keep their colour after they leave the window. They used to be
+   * painted "excluded" the moment the window moved past them, so the trail of
+   * reads that *is* the search disappeared — and with ruled-out bars drawn a
+   * shade off the chart well, a late hit ended as one green bar in an empty
+   * chart, indistinguishable at a glance from a miss.
+   */
   const stateFor = (index: number): BarState => {
     if (state.foundIndex === index) return 'found';
     if (index === activeIndex) return 'compare';
-    if (index < state.lo || index > state.hi) return 'excluded';
     if (state.probed.includes(index)) return 'read';
+    if (index < state.lo || index > state.hi) return 'excluded';
     return 'idle';
   };
+
+  const candidates = Math.max(0, state.hi - state.lo + 1);
+  const targetPresent = values.includes(target);
 
   const regenerate = (nextSize: number) => {
     setPlaying(false);
@@ -105,11 +119,15 @@ export function SearchingPage() {
     setTarget(pickTarget(randomSortedArray(nextSize, nextSeed)));
   };
 
-  const outcome = state.foundIndex !== null
-    ? `Found ${target} at index ${state.foundIndex}`
-    : state.exhausted
-      ? `${target} is not in the array`
-      : null;
+  const probes = state.probed.length;
+  const outcome =
+    state.foundIndex !== null
+      ? `Found ${target} at index ${state.foundIndex} — ${probes} ${
+          probes === 1 ? 'probe' : 'probes'
+        } into ${values.length} values.`
+      : state.exhausted
+        ? `${target} is not in the array. Ruled out all ${values.length} values in ${probes} probes.`
+        : null;
 
   const handleToggle = () => {
     if (playing) {
@@ -136,13 +154,15 @@ export function SearchingPage() {
     onStepForward: handleStepForward,
   });
 
+
+  const stepKinds = useMemo(() => stepKindsByName(player.steps), [player.steps]);
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
         <h1>Searching</h1>
         <p>
-          Five search strategies over the same sorted array. Watch the candidate window collapse —
-          greyed bars have been ruled out without ever being read.
+          Five search strategies over the same sorted array. Dimmed bars were ruled out without
+          ever being read; blue ones were read on the way.
         </p>
       </header>
 
@@ -177,6 +197,37 @@ export function SearchingPage() {
           />
         </label>
 
+        {/*
+          A miss is the more interesting run — the window has to close all the
+          way — and it used to require guessing a value that happened to be
+          absent. Two chips make either case one tap, and the chip that matches
+          the current target stays lit even when it was typed by hand.
+        */}
+        <div className={styles.targetModes} role="group" aria-label="Pick a target that is">
+          <button
+            type="button"
+            className={`${styles.mode} ${targetPresent ? styles.modeOn : ''}`}
+            aria-pressed={targetPresent}
+            onClick={() => {
+              setPlaying(false);
+              setTarget(pickTarget(values));
+            }}
+          >
+            In the array
+          </button>
+          <button
+            type="button"
+            className={`${styles.mode} ${!targetPresent ? styles.modeOn : ''}`}
+            aria-pressed={!targetPresent}
+            onClick={() => {
+              setPlaying(false);
+              setTarget(pickMissing(values));
+            }}
+          >
+            Not in the array
+          </button>
+        </div>
+
         <label>
           Size
           <input
@@ -202,7 +253,8 @@ export function SearchingPage() {
         {def.requiresSorted && <em>Requires sorted input — this array is always ascending.</em>}
       </p>
 
-      <PlaybackControls
+      <RunBar
+        summary={`${def.label} · ${size} · target ${target}`}
         isPlaying={playing}
         canStepBack={player.canStepBack}
         canStepForward={player.canStepForward}
@@ -212,17 +264,35 @@ export function SearchingPage() {
         onToggle={handleToggle}
         onStepBack={handleStepBack}
         onStepForward={handleStepForward}
-        onReset={() => {
-          setPlaying(false);
-          player.reset();
-        }}
         onSpeedChange={setSpeedMs}
         onSeek={(cursor) => {
           setPlaying(false);
           player.seekTo(cursor);
         }}
-        resetLabel="Restart"
+        resets={[
+          {
+            label: 'Rewind',
+            title: 'Back to step 0, same array',
+            onClick: () => {
+              setPlaying(false);
+              player.reset();
+            },
+          },
+          {
+            label: 'New array',
+            title: 'Discard this run and generate a fresh array',
+            danger: true,
+            onClick: () => regenerate(size),
+          },
+        ]}
+        stepKinds={stepKinds}
       />
+
+      <Narration
+        tag={player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}
+      >
+        {narrateSearchStep(player.currentStep, state, target)}
+      </Narration>
 
       <div className={styles.workspace}>
         <div className={styles.left}>
@@ -248,6 +318,16 @@ export function SearchingPage() {
             labels={STAT_LABELS}
             complexity={def.complexity}
             note={state.note}
+            footer={
+              <div className={styles.window}>
+                <span>
+                  <strong>{candidates}</strong> in play
+                </span>
+                <span>
+                  <strong>{values.length - candidates}</strong> ruled out
+                </span>
+              </div>
+            }
           />
           <PseudocodePanel lines={def.pseudocode} activeLine={player.frame.currentLine} />
         </div>

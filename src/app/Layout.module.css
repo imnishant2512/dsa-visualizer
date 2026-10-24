@@ -6,51 +6,75 @@
 
 .nav {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  padding: 12px 24px;
-  background: var(--bg-raised);
-  border-bottom: 1px solid var(--border);
+  align-items: stretch;
+  flex-wrap: nowrap;
+  padding: 0 24px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--rule);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .brand {
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px 16px 0;
+  font-weight: 800;
   font-size: 15px;
   color: var(--text);
   text-decoration: none;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.mark {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
 }
 
 .links {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  border-left: 1px solid var(--hairline);
+  /*
+   * Scrolls rather than stacks. The scrollbar is hidden because the cells are
+   * cut off mid-glyph at the edge, which is its own affordance.
+   */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.links::-webkit-scrollbar {
+  display: none;
 }
 
 .link {
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
   text-decoration: none;
   font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+  border-right: 1px solid var(--hairline);
 }
 
 .link:hover {
-  background: var(--bg-sunken);
+  color: var(--accent-soft);
+}
+
+.active,
+.active:hover {
+  background: var(--accent);
   color: var(--text);
-}
-
-.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.pending {
-  opacity: 0.55;
 }
 
 .main {

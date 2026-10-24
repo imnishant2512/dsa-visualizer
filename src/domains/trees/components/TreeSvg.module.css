@@ -68,16 +68,46 @@
   fill: var(--v-sorted);
 }
 
+/*
+ * Mid-rotation, a subtree is briefly unreferenced. It stays exactly where it
+ * was and dims — which is what "detached" means here — rather than being
+ * parked in a row at the bottom of the diagram, where the nodes read as new
+ * objects appearing from nowhere.
+ */
 .detached circle {
   stroke-dasharray: 3 3;
-  opacity: 0.75;
+  opacity: 0.45;
 }
 
-.detachedLabel {
+.detached text {
+  opacity: 0.45;
+}
+
+/* The edge this step is rewriting: the whole point of stepping a rotation. */
+.edgeRewriting {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.edgeDetached {
+  stroke-dasharray: 3 3;
+  opacity: 0.4;
+}
+
+.balance,
+.balanceBad {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.balance {
   fill: var(--text-faint);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+}
+
+/* Past ±1 is the condition that triggers a rotation, so it is not neutral. */
+.balanceBad {
+  fill: var(--accent-soft);
 }
 
 .empty {
@@ -121,4 +151,37 @@
   font-style: normal;
   font-size: 9px;
   color: var(--text-faint);
+}
+
+/* Hover pairing between the heap's tree view and the array behind it. */
+.related circle {
+  stroke: var(--v-read);
+  stroke-width: 2.5;
+}
+
+.related text {
+  fill: var(--v-read);
+}
+
+.cellRelated {
+  border-color: var(--v-read);
+  color: var(--v-read);
+}
+
+.heapIndex {
+  fill: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.arithmetic {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 1.5em;
+}
+
+.arithmetic code {
+  font-family: var(--mono);
+  color: var(--text);
 }

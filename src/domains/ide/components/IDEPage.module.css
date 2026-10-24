@@ -1,206 +1,50 @@
-/*
- * The token here is `--text`. This file previously asked for `--text-normal`,
- * which is defined nowhere, so every rule using it silently fell back to the
- * inherited colour.
- */
-.container {
+.page {
   display: flex;
   flex-direction: column;
-  /* Fills the layout's main column; the floor keeps it usable if it ever
-     renders outside one. */
+  gap: 16px;
+  /* Fills the layout's column, so the scratchpad's editor can take the height. */
   flex: 1;
-  min-height: 520px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--bg-sunken);
-  color: var(--text);
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 12px 24px;
-  background: var(--bg-raised);
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-}
-
-.field {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.select {
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-sunken);
-  color: var(--text);
-  font-size: 14px;
-}
-
-.runBtn,
-.secondaryBtn {
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.runBtn {
-  background: var(--accent);
-  color: #06121d;
-}
-
-.secondaryBtn {
-  background: transparent;
-  border-color: var(--border-strong);
-  color: var(--text-muted);
-}
-
-.runBtn:hover:not(:disabled),
-.secondaryBtn:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.runBtn:disabled,
-.secondaryBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.hint {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text-faint);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 3px 7px;
-}
-
-/* Where the code actually executes is worth stating, not burying in a README. */
-.where {
-  margin: 0 0 0 auto;
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-.where strong {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.workspace {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.editorSection {
-  flex: 1 1 55%;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  border-right: 1px solid var(--border);
-}
-
-.rightPanel {
-  flex: 1 1 45%;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  background: var(--bg-sunken);
-}
-
-.header {
+.intro {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 13px;
-  background: var(--bg-raised);
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: var(--mono);
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.meta {
-  margin-left: auto;
-  font-weight: 400;
-  color: var(--text-faint);
-}
-
-.inputSection {
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid var(--border);
-}
-
-.inputArea {
-  width: 100%;
-  height: 110px;
-  background: transparent;
-  border: none;
-  padding: 12px 16px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  resize: vertical;
-}
-
-.outputSection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.output {
-  flex: 1;
-  padding: 16px;
+.intro p {
   margin: 0;
-  font-family: var(--mono);
+  max-width: 70ch;
   font-size: 13px;
-  line-height: 1.55;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
+  color: var(--text-muted);
+}
+
+.modes {
+  display: flex;
+  border-bottom: 2px solid var(--rule);
+}
+
+.mode {
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  color: var(--text-muted);
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.mode:hover:not(:disabled) {
+  color: var(--accent-soft);
+}
+
+.modeOn,
+.modeOn:hover:not(:disabled) {
   color: var(--text);
-}
-
-/*
- * Failure is signalled by the "exit N" reading in the header as well as by
- * colour, so the state survives greyscale and colour blindness.
- */
-.error {
-  color: var(--v-swap);
-}
-
-/* Side by side needs width; below that the panels stack. */
-@media (max-width: 900px) {
-  .workspace {
-    flex-direction: column;
-    overflow: auto;
-  }
-
-  .editorSection {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    min-height: 320px;
-  }
-
-  .where {
-    margin-left: 0;
-    flex-basis: 100%;
-  }
+  border-bottom-color: var(--accent);
 }
