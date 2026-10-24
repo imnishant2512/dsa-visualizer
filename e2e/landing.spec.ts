@@ -9,10 +9,11 @@ test.describe('landing', () => {
     // About five seconds a direction; the reverse tag is the claim.
     await expect(hero.getByText('reverse', { exact: true })).toBeVisible({ timeout: 20_000 });
     const readout = hero.locator('span').filter({ hasText: /^\d+ \/ \d+$/ });
-    const first = Number((await readout.textContent())?.split('/')[0]);
-    await page.waitForTimeout(600);
-    const later = Number((await readout.textContent())?.split('/')[0]);
-    expect(later).toBeLessThan(first);
+    const cursor = async () => Number((await readout.textContent())?.split('/')[0]);
+    const first = await cursor();
+    // The demo holds at each end before turning, so poll rather than wait a
+    // fixed time that may still fall inside the hold.
+    await expect.poll(cursor, { timeout: 5_000 }).toBeLessThan(first);
   });
 
   test('does not autoplay for a reader who asked for reduced motion', async ({ browser }) => {
