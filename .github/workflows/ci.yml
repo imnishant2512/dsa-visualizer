@@ -104,11 +104,11 @@ jobs:
       checks: write
       pull-requests: write
     env:
-      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 != '' }}
     steps:
       - name: Skip when no deploy credential is configured
         if: env.HAS_CREDENTIAL != 'true'
-        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT is not set, so no preview was deployed. See CONTRIBUTING.md → Deployment."
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 is not set, so no preview was deployed. See CONTRIBUTING.md → Deployment."
 
       - uses: actions/checkout@v5
         if: env.HAS_CREDENTIAL == 'true'
@@ -125,7 +125,7 @@ jobs:
         if: env.HAS_CREDENTIAL == 'true'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 }}
           projectId: sorting-visualization-29fd0
           expires: 7d
 
@@ -142,11 +142,11 @@ jobs:
       name: production
       url: https://sorting-visualization-29fd0.web.app
     env:
-      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 != '' }}
     steps:
       - name: Skip when no deploy credential is configured
         if: env.HAS_CREDENTIAL != 'true'
-        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT is not set, so nothing was deployed. Deploy by hand with npm run deploy, or see CONTRIBUTING.md → Deployment."
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 is not set, so nothing was deployed. Deploy by hand with npm run deploy, or see CONTRIBUTING.md → Deployment."
 
       - uses: actions/checkout@v5
         if: env.HAS_CREDENTIAL == 'true'
@@ -163,6 +163,6 @@ jobs:
         if: env.HAS_CREDENTIAL == 'true'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0 }}
           projectId: sorting-visualization-29fd0
           channelId: live
