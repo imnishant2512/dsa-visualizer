@@ -9,8 +9,6 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
-    commit-message:
-      prefix: 'Bump'
     groups:
       # Patch and minor updates of dev tooling: low risk, one PR.
       dev-tooling:
@@ -25,8 +23,6 @@ updates:
     directory: /
     schedule:
       interval: monthly
-    commit-message:
-      prefix: 'Bump'
     groups:
       actions:
         patterns: ['*']
