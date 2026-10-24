@@ -188,9 +188,10 @@ CI deploys. Nothing else needs to:
 
 Both deploy the exact `dist/` that passed the checks, never a rebuild.
 
-They need one repository secret, `FIREBASE_SERVICE_ACCOUNT`, holding the JSON
-key of a service account with the _Firebase Hosting Admin_ role. The simplest
-way to create both is:
+They need one repository secret,
+`FIREBASE_SERVICE_ACCOUNT_SORTING_VISUALIZATION_29FD0`, holding the JSON key
+of a service account with the _Firebase Hosting Admin_ role. That is the name
+the Firebase CLI gives it, and the simplest way to create both is:
 
 ```sh
 npx firebase-tools init hosting:github
