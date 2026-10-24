@@ -16,3 +16,6 @@ dist-ssr
 test-results
 playwright-report
 blob-report
+
+# Coverage reports from npm run test:coverage.
+coverage

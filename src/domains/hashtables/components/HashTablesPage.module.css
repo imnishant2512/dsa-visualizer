@@ -17,7 +17,7 @@
 
 .intro code {
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--accent-soft);
 }
 
 .setup {
@@ -58,7 +58,7 @@
 
 .hash {
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--accent-soft);
   font-size: 11px;
 }
 
@@ -91,7 +91,7 @@
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   background: var(--accent-tint);
-  color: var(--accent);
+  color: var(--accent-soft);
   font-family: var(--mono);
 }
 

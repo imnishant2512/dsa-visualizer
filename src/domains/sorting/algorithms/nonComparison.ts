@@ -11,7 +11,8 @@ import { insertionPass } from './insertionFamily';
 export const countingSort = defineSort({
   id: 'counting',
   label: 'Counting Sort',
-  summary: 'Tallies how many times each value occurs, then writes values back in ascending order. No comparisons at all.',
+  summary:
+    'Tallies how many times each value occurs, then writes values back in ascending order. No comparisons at all.',
   complexity: { time: 'O(n + k)', space: 'O(k)' },
   pseudocode: [
     'for each value v in a: count[v] += 1',
@@ -47,7 +48,8 @@ export const countingSort = defineSort({
 export const radixSort = defineSort({
   id: 'radix',
   label: 'Radix Sort (LSD)',
-  summary: 'Distributes values into 10 digit buckets, least-significant digit first, one pass per digit place.',
+  summary:
+    'Distributes values into 10 digit buckets, least-significant digit first, one pass per digit place.',
   complexity: { time: 'O(d · n)', space: 'O(n + k)' },
   pseudocode: [
     'for place = 1, 10, 100, ... up to max:',
@@ -93,7 +95,8 @@ export const radixSort = defineSort({
 export const bucketSort = defineSort({
   id: 'bucket',
   label: 'Bucket Sort',
-  summary: 'Scatters values into range buckets, insertion-sorts each bucket, then concatenates them.',
+  summary:
+    'Scatters values into range buckets, insertion-sorts each bucket, then concatenates them.',
   complexity: { time: 'O(n + k) average, O(n²) worst', space: 'O(n + k)' },
   pseudocode: [
     'find min and max',

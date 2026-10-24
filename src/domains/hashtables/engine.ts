@@ -132,10 +132,6 @@ export function liveKeys(state: HashState): number[] {
   );
 }
 
-export function loadFactor(state: HashState): number {
-  return liveKeys(state).length / state.size;
-}
-
 /**
  * One committed mutation, in the form it takes in the log.
  *

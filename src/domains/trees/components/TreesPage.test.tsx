@@ -37,16 +37,15 @@ describe('TreesPage', () => {
     expect(remove.getAttribute('title')).toMatch(/not in the tree/);
 
     // A search for a missing key is a legitimate question, not a refusal.
-    expect(screen.getByRole('button', { name: 'Search 999' }).hasAttribute('disabled')).toBe(
-      false,
-    );
+    expect(screen.getByRole('button', { name: 'Search 999' }).hasAttribute('disabled')).toBe(false);
   });
 
   it('shows balance factors only in AVL mode, where they drive every rotation', () => {
     renderPage();
     const balanceLabels = () =>
-      Array.from(document.querySelectorAll('svg text')).filter((t) =>
-        /^[+-]?\d$/.test(t.textContent ?? '') && /balance/.test(t.getAttribute('class') ?? ''),
+      Array.from(document.querySelectorAll('svg text')).filter(
+        (t) =>
+          /^[+-]?\d$/.test(t.textContent ?? '') && /balance/.test(t.getAttribute('class') ?? ''),
       );
 
     expect(balanceLabels()).toHaveLength(0);

@@ -14,7 +14,11 @@ interface EditorStubProps {
 
 vi.mock('@monaco-editor/react', () => ({
   default: ({ value, path, onChange }: EditorStubProps) => (
-    <textarea aria-label={path} value={value} onChange={(event) => onChange?.(event.target.value)} />
+    <textarea
+      aria-label={path}
+      value={value}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
   ),
   useMonaco: () => null,
 }));
@@ -33,9 +37,9 @@ afterEach(cleanup);
 describe('IDEPage', () => {
   it('opens on the sort visualizer and records the template on arrival', async () => {
     render(<IDEPage />);
-    expect(screen.getByRole('tab', { name: 'Visualize a sort' }).getAttribute('aria-selected')).toBe(
-      'true',
-    );
+    expect(
+      screen.getByRole('tab', { name: 'Visualize a sort' }).getAttribute('aria-selected'),
+    ).toBe('true');
     // The template is a correct bubble sort, so the verdict must say so.
     await waitFor(() => expect(screen.getByText(/^Sorted correctly — /)).toBeDefined());
   });

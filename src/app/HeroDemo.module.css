@@ -45,7 +45,7 @@
 
 /* The half of the loop that is the point, so it takes the accent. */
 .reverse {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: var(--text);
 }
 

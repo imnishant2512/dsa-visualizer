@@ -44,9 +44,7 @@ export function SortingPage() {
   // Initial state comes from the URL when present, so a shared link reproduces
   // the exact run. The array travels as a seed rather than 45 numbers.
   const [seed, setSeed] = useState<number>(() => readInt(params.get('seed')) ?? randomSeed());
-  const [size, setSize] = useState<number>(
-    () => readInt(params.get('size')) ?? ARRAY_SIZE.default,
-  );
+  const [size, setSize] = useState<number>(() => readInt(params.get('size')) ?? ARRAY_SIZE.default);
   const [shape, setShape] = useState<ArrayShape>(() =>
     isArrayShape(params.get('shape')) ? (params.get('shape') as ArrayShape) : 'random',
   );
@@ -315,9 +313,7 @@ export function SortingPage() {
         setupOpen={setupOpen}
         isPlaying={playing}
         canStepBack={raceMode ? raceCursor >= 0 : playerA.canStepBack}
-        canStepForward={
-          raceMode ? raceCursor < raceLength - 1 : playerA.canStepForward
-        }
+        canStepForward={raceMode ? raceCursor < raceLength - 1 : playerA.canStepForward}
         cursor={raceMode ? raceCursor : playerA.frame.cursor}
         totalSteps={raceMode ? raceLength : playerA.totalSteps}
         speedMs={speedMs}

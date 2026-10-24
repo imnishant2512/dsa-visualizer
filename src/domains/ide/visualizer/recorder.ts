@@ -10,8 +10,7 @@ import { JS_TIMEOUT_MS } from '../executors/browserExecutor';
 export const STEP_CAP = 400_000;
 
 export type RecordResult =
-  | { ok: true; steps: SortStep[]; result: number[] }
-  | { ok: false; error: string };
+  { ok: true; steps: SortStep[]; result: number[] } | { ok: false; error: string };
 
 /**
  * Runs a user's `customSort` generator against a recording context and returns
@@ -125,7 +124,8 @@ export function recordSort(code: string, values: number[], cap: number): RecordR
     if (!iterator || typeof iterator.next !== 'function') {
       return {
         ok: false,
-        error: 'customSort must be a generator — declare it with function* and use yield* ctx.compare(…).',
+        error:
+          'customSort must be a generator — declare it with function* and use yield* ctx.compare(…).',
       };
     }
     let yields = 0;

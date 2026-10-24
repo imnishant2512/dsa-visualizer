@@ -179,7 +179,11 @@ export function SortVisualizer() {
   const comparison = useMemo(() => {
     if (!ready) return null;
     const builtin = buildSteps(SORT_BY_ID[compareId], { values: ready.input });
-    return { mine: tally(ready.steps), theirs: tally(builtin.steps), theirSteps: builtin.steps.length };
+    return {
+      mine: tally(ready.steps),
+      theirs: tally(builtin.steps),
+      theirSteps: builtin.steps.length,
+    };
   }, [ready, compareId]);
 
   const highlights = highlightsForStep(player.currentStep);
@@ -218,7 +222,9 @@ export function SortVisualizer() {
       <div className={css.editorPane}>
         <div className={css.paneHead}>
           <span className={css.paneTitle}>customSort.js</span>
-          <span className={css.where}>Runs in a sandboxed worker in this tab. Nothing is uploaded.</span>
+          <span className={css.where}>
+            Runs in a sandboxed worker in this tab. Nothing is uploaded.
+          </span>
         </div>
         <div className={css.editor}>
           <Editor
@@ -255,9 +261,7 @@ export function SortVisualizer() {
             Reset to template
           </button>
           {stale && (
-            <span className={css.stale}>
-              The code or the input changed since this recording.
-            </span>
+            <span className={css.stale}>The code or the input changed since this recording.</span>
           )}
         </div>
       </div>
@@ -331,7 +335,13 @@ export function SortVisualizer() {
         />
 
         <Narration
-          tag={recording.status === 'failed' ? 'Error' : player.frame.cursor >= 0 ? `Step ${player.frame.cursor + 1}` : 'Ready'}
+          tag={
+            recording.status === 'failed'
+              ? 'Error'
+              : player.frame.cursor >= 0
+                ? `Step ${player.frame.cursor + 1}`
+                : 'Ready'
+          }
           tone={recording.status === 'failed' ? 'refusal' : 'neutral'}
         >
           {narration}
@@ -363,7 +373,10 @@ export function SortVisualizer() {
                 <div className={css.against}>
                   <label>
                     Against
-                    <select value={compareId} onChange={(event) => setCompareId(event.target.value)}>
+                    <select
+                      value={compareId}
+                      onChange={(event) => setCompareId(event.target.value)}
+                    >
                       {SORT_ALGORITHMS.filter((a) => a.id !== 'bogo').map((algorithm) => (
                         <option key={algorithm.id} value={algorithm.id}>
                           {algorithm.label}
@@ -374,7 +387,10 @@ export function SortVisualizer() {
                   {/* Same input, counted by the same engine — so the difference
                       is the algorithms, not the bookkeeping. */}
                   <span>
-                    comparisons <strong>{signed(comparison.mine.comparisons - comparison.theirs.comparisons)}</strong>
+                    comparisons{' '}
+                    <strong>
+                      {signed(comparison.mine.comparisons - comparison.theirs.comparisons)}
+                    </strong>
                   </span>
                   <span>
                     swaps <strong>{signed(comparison.mine.swaps - comparison.theirs.swaps)}</strong>

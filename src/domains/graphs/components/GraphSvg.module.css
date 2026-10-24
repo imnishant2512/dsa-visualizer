@@ -63,7 +63,9 @@
   fill: var(--bg-raised);
   stroke: var(--border-strong);
   stroke-width: 2;
-  transition: fill 0.12s ease, stroke 0.12s ease;
+  transition:
+    fill 0.12s ease,
+    stroke 0.12s ease;
 }
 
 .node text,

@@ -136,7 +136,6 @@ export function TreesPage() {
       : Math.floor(Math.log2(heap.displayState.items.length)) + 1
     : nodeHeight(tree.displayState, tree.displayState.rootId);
 
-
   const activeSteps = controller.active?.steps ?? NO_STEPS;
   const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (

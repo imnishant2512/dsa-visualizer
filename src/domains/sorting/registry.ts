@@ -75,7 +75,11 @@ export const SORT_PROFILE: Record<string, SortProfile> = {
   // Insertion's average is half the quadratic family's, because it stops at
   // the first element that is already smaller rather than scanning the pass.
   insertion: { bigO: 'n²', measures: 'comparisons', predict: (n) => (n * n) / 4 },
-  shell: { bigO: 'n^1.3', measures: 'comparisons', predict: (n) => 2 * Math.pow(Math.max(2, n), 1.3) },
+  shell: {
+    bigO: 'n^1.3',
+    measures: 'comparisons',
+    predict: (n) => 2 * Math.pow(Math.max(2, n), 1.3),
+  },
   // Selection's count is exact and input-independent: it always scans the
   // whole unsorted remainder, which is the reason it never beats its bound.
   selection: { bigO: 'n²', measures: 'comparisons', predict: (n) => (n * (n - 1)) / 2 },

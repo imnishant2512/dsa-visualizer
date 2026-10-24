@@ -37,6 +37,14 @@
   --accent: #ec3013;
   --accent-hover: #ff4a2a;
   /*
+   * Accent *behind text*. Light type on #ec3013 is 3.8:1, under the 4.5:1 AA
+   * minimum, so filled controls that carry a label use this deeper shade
+   * (4.7:1) and darken further on hover (6.0:1). The pure accent stays for
+   * marks, rules and borders that carry no text.
+   */
+  --accent-fill: #d02a11;
+  --accent-fill-hover: #b3200a;
+  /*
    * Accent-on-dark for *text*. #ec3013 fails contrast as a foreground on the
    * ground colour, so anything reading as accent-coloured type uses this.
    */
@@ -88,7 +96,7 @@
   --radius-sm: 0;
   --shadow: none;
 
-  --font: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  --font:
+    'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }

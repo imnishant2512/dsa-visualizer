@@ -66,13 +66,13 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text);
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
 }
 
 .record:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: var(--accent-fill-hover);
+  border-color: var(--accent-fill-hover);
   color: var(--text);
 }
 

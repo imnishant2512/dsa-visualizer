@@ -40,7 +40,10 @@ export function layoutTree(state: TreeState): TreeLayout {
     seen.add(id);
     const node = state.nodes[id];
     walk(node.leftId, depth + 1);
-    positions[id] = { x: column * X_SPACING + NODE_RADIUS + 8, y: depth * Y_SPACING + NODE_RADIUS + 8 };
+    positions[id] = {
+      x: column * X_SPACING + NODE_RADIUS + 8,
+      y: depth * Y_SPACING + NODE_RADIUS + 8,
+    };
     column += 1;
     maxDepth = Math.max(maxDepth, depth);
     walk(node.rightId, depth + 1);

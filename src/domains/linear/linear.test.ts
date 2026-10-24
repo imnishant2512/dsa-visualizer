@@ -18,7 +18,13 @@ import {
   stackPush,
   type OpArgs,
 } from './operations';
-import { LINEAR_STAT_KEYS, type ListState, type ListStep, type SeqState, type SeqStep } from './types';
+import {
+  LINEAR_STAT_KEYS,
+  type ListState,
+  type ListStep,
+  type SeqState,
+  type SeqStep,
+} from './types';
 
 /** Runs one operation to completion and returns the resulting state. */
 function apply<TState, TStep>(
@@ -35,11 +41,19 @@ function apply<TState, TStep>(
   return current;
 }
 
-function runSeq(state: SeqState, op: (typeof SEQ_OPERATIONS)['array'][number], args: Partial<OpArgs> = {}) {
+function runSeq(
+  state: SeqState,
+  op: (typeof SEQ_OPERATIONS)['array'][number],
+  args: Partial<OpArgs> = {},
+) {
   return apply(seqEngine, op.generate, state, args);
 }
 
-function runList(state: ListState, op: (typeof LIST_OPERATIONS)[number], args: Partial<OpArgs> = {}) {
+function runList(
+  state: ListState,
+  op: (typeof LIST_OPERATIONS)[number],
+  args: Partial<OpArgs> = {},
+) {
   return apply(listEngine, op.generate, state, args);
 }
 
@@ -181,15 +195,16 @@ describe('linked list', () => {
 });
 
 describe('step inversion', () => {
-  const seqCases: Array<[string, SeqState, (typeof SEQ_OPERATIONS)['array'][number], Partial<OpArgs>]> =
-    Object.entries(SEQ_OPERATIONS).flatMap(([variant, ops]) =>
-      ops.map((op): [string, SeqState, (typeof SEQ_OPERATIONS)['array'][number], Partial<OpArgs>] => [
-        `${variant}/${op.id}`,
-        initSeqState([4, 8, 15, 16, 23]),
-        op,
-        { value: 15, index: 2 },
-      ]),
-    );
+  const seqCases: Array<
+    [string, SeqState, (typeof SEQ_OPERATIONS)['array'][number], Partial<OpArgs>]
+  > = Object.entries(SEQ_OPERATIONS).flatMap(([variant, ops]) =>
+    ops.map((op): [string, SeqState, (typeof SEQ_OPERATIONS)['array'][number], Partial<OpArgs>] => [
+      `${variant}/${op.id}`,
+      initSeqState([4, 8, 15, 16, 23]),
+      op,
+      { value: 15, index: 2 },
+    ]),
+  );
 
   it.each(seqCases)('%s inverts every step exactly', (_name, state, op, args) => {
     const full: OpArgs = { value: 0, index: 0, ...args };

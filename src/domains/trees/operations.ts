@@ -322,7 +322,12 @@ function makeTraversal(
 export const inorderTraversal = makeTraversal(
   'inorder',
   'In-order',
-  ['inorder(node):', '  inorder(node.left)', '  visit(node)   // sorted for a BST', '  inorder(node.right)'],
+  [
+    'inorder(node):',
+    '  inorder(node.left)',
+    '  visit(node)   // sorted for a BST',
+    '  inorder(node.right)',
+  ],
   function* walk(ctx, id): Generator<TreeStep> {
     if (id === null) return;
     yield* walk(ctx, ctx.nodes[id].leftId);
@@ -361,7 +366,13 @@ export const postorderTraversal = makeTraversal(
 export const levelorderTraversal = makeTraversal(
   'levelorder',
   'Level-order',
-  ['levelorder():', '  queue = [root]', '  while queue is not empty:', '    node = queue.shift(); visit(node)', '    queue.push(node.left, node.right)'],
+  [
+    'levelorder():',
+    '  queue = [root]',
+    '  while queue is not empty:',
+    '    node = queue.shift(); visit(node)',
+    '    queue.push(node.left, node.right)',
+  ],
   function* walk(ctx, rootId): Generator<TreeStep> {
     if (rootId === null) return;
     const queue: string[] = [rootId];

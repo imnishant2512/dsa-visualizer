@@ -12,41 +12,66 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: CI reads the repo and nothing else. Jobs that need more ask
+# for it themselves.
+permissions:
+  contents: read
+
 jobs:
+  # The ruleset on main requires a check named exactly `verify`; keep the name.
   verify:
     name: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install
         run: npm ci
 
+      # The cheap, static checks first, so a formatting slip fails in seconds
+      # rather than after the test suite.
+      - name: Check formatting
+        run: npm run format:check
+
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      - name: Find unused files, exports and dependencies
+        run: npm run knip
 
-      # `npm run build` is `tsc -b && vite build`, so this is the typecheck as
-      # well as the bundle. It runs last: a type error is easier to read than a
-      # test failure caused by one.
-      - name: Typecheck and build
-        run: npm run build
+      - name: Typecheck (app and end-to-end tests)
+        run: npm run typecheck
 
-      - name: Typecheck end-to-end tests
-        run: npm run typecheck:e2e
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
-      # Real Chrome against the built bundle: the worker sandbox, layout, and
-      # the playback clock are simulated in the unit suite and exercised here.
-      # `channel: chrome` uses the Chrome preinstalled on the runner.
+      - name: Unit and component tests, with coverage thresholds
+        run: npm run test:coverage
+
+      - name: Build
+        run: npx vite build
+
+      # Real Chrome against the built bundle: the worker sandbox, layout, the
+      # CSP and the playback clock are simulated in the unit suite and
+      # exercised here. `channel: chrome` uses the Chrome preinstalled on the
+      # runner.
       - name: End-to-end tests
         run: npx playwright test
+
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Keep traces from a failed end-to-end run
         if: failure()
@@ -55,3 +80,89 @@ jobs:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+
+      # The exact bundle that passed every check above is what the preview and
+      # deploy jobs below ship — neither rebuilds.
+      - name: Keep the verified build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  # A temporary Firebase preview channel per pull request, with its URL posted
+  # on the PR. Same-repo branches only: a fork's PR must never run with the
+  # deploy credential.
+  preview:
+    name: preview
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    env:
+      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - name: Skip when no deploy credential is configured
+        if: env.HAS_CREDENTIAL != 'true'
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT is not set, so no preview was deployed. See CONTRIBUTING.md → Deployment."
+
+      - uses: actions/checkout@v5
+        if: env.HAS_CREDENTIAL == 'true'
+
+      - uses: actions/download-artifact@v4
+        if: env.HAS_CREDENTIAL == 'true'
+        with:
+          name: dist
+          path: dist/
+
+      # Third-party and handed the deploy credential, so pinned to a commit
+      # (v0.11.0) rather than a tag that could be moved. Dependabot bumps it.
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.11.0
+        if: env.HAS_CREDENTIAL == 'true'
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: sorting-visualization-29fd0
+          expires: 7d
+
+  # Every push to main that passes verify goes live. Firebase releases a deploy
+  # atomically, so a run cancelled by a newer push never leaves a half-shipped
+  # site; the newer run ships instead.
+  deploy:
+    name: deploy
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://sorting-visualization-29fd0.web.app
+    env:
+      HAS_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - name: Skip when no deploy credential is configured
+        if: env.HAS_CREDENTIAL != 'true'
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT is not set, so nothing was deployed. Deploy by hand with npm run deploy, or see CONTRIBUTING.md → Deployment."
+
+      - uses: actions/checkout@v5
+        if: env.HAS_CREDENTIAL == 'true'
+
+      - uses: actions/download-artifact@v4
+        if: env.HAS_CREDENTIAL == 'true'
+        with:
+          name: dist
+          path: dist/
+
+      # Third-party and handed the deploy credential, so pinned to a commit
+      # (v0.11.0) rather than a tag that could be moved. Dependabot bumps it.
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.11.0
+        if: env.HAS_CREDENTIAL == 'true'
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: sorting-visualization-29fd0
+          channelId: live

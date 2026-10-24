@@ -171,7 +171,6 @@ export function HashTablesPage() {
       ? insertPseudocode(state.strategy)
       : table.active?.pseudocode;
 
-
   const activeSteps = table.active?.steps ?? NO_STEPS;
   const stepKinds = useMemo(() => stepKindsByName(activeSteps), [activeSteps]);
   return (

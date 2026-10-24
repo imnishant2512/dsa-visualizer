@@ -22,9 +22,12 @@ describe('parseDiagnostics', () => {
   });
 
   it('pairs a rustc location with the message printed above it', () => {
-    const stderr = ['error[E0308]: mismatched types', ' --> prog.rs:3:17', '  |', '3 |     let x: i32 = "s";'].join(
-      '\n',
-    );
+    const stderr = [
+      'error[E0308]: mismatched types',
+      ' --> prog.rs:3:17',
+      '  |',
+      '3 |     let x: i32 = "s";',
+    ].join('\n');
     expect(parseDiagnostics(stderr)).toEqual([
       { line: 3, column: 17, message: 'error[E0308]: mismatched types', severity: 'error' },
     ]);

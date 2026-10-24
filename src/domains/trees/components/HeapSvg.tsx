@@ -96,7 +96,12 @@ export function HeapSvg({ state, currentStep }: HeapSvgProps) {
             <text x={pos.x} y={pos.y + 4} textAnchor="middle">
               {state.items[index]}
             </text>
-            <text x={pos.x} y={pos.y - NODE_RADIUS - 5} textAnchor="middle" className={styles.heapIndex}>
+            <text
+              x={pos.x}
+              y={pos.y - NODE_RADIUS - 5}
+              textAnchor="middle"
+              className={styles.heapIndex}
+            >
               {index}
             </text>
           </g>
@@ -128,8 +133,7 @@ export function HeapSvg({ state, currentStep }: HeapSvgProps) {
           <>
             <code>i = {family.index}</code> · parent{' '}
             <code>
-              ⌊({family.index}−1)/2⌋ ={' '}
-              {family.parent === null ? '— it is the root' : family.parent}
+              ⌊({family.index}−1)/2⌋ = {family.parent === null ? '— it is the root' : family.parent}
             </code>{' '}
             · left <code>2i+1 = {family.left ?? `${2 * family.index + 1}, past the end`}</code> ·
             right <code>2i+2 = {family.right ?? `${2 * family.index + 2}, past the end`}</code>

@@ -21,9 +21,7 @@ test.describe('navigation', () => {
       await page.goto(route.path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(route.heading);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-      await expect(page.getByRole('link', { name: route.nav, exact: true })).toHaveClass(
-        /active/,
-      );
+      await expect(page.getByRole('link', { name: route.nav, exact: true })).toHaveClass(/active/);
     });
   }
 
@@ -51,7 +49,10 @@ test.describe('navigation', () => {
     await page.goto('/sortng');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(/not found/i);
     await expect(page.getByText('/sortng')).toBeVisible();
-    await page.getByRole('link', { name: /Sorting/ }).first().click();
+    await page
+      .getByRole('link', { name: /Sorting/ })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/sorting/);
   });
 

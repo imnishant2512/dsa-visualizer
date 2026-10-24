@@ -3,15 +3,7 @@ import type { GridState } from '../types';
 import styles from './Grid.module.css';
 
 export type CellRole =
-  | 'start'
-  | 'end'
-  | 'wall'
-  | 'weight'
-  | 'path'
-  | 'scanning'
-  | 'visited'
-  | 'frontier'
-  | 'empty';
+  'start' | 'end' | 'wall' | 'weight' | 'path' | 'scanning' | 'visited' | 'frontier' | 'empty';
 
 interface CellProps {
   index: number;

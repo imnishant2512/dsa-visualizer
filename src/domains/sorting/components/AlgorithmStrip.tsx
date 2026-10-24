@@ -42,7 +42,9 @@ export function AlgorithmStrip({
           <span className={styles.family}>{FAMILY_BY_ID[def.id]}</span>
           {profile && <span className={styles.bigO}>O({profile.bigO})</span>}
           <button type="button" className={styles.change} onClick={onToggle} aria-expanded={open}>
-            {open ? 'Close' : `Change — ${SORT_ALGORITHMS.length} in ${SORT_GROUPS.length} families`}
+            {open
+              ? 'Close'
+              : `Change — ${SORT_ALGORITHMS.length} in ${SORT_GROUPS.length} families`}
           </button>
         </div>
         {action}

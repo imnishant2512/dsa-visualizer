@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { DOMAINS } from './domains';
-import styles from './NotFound.module.css';
+import styles from './StatusPage.module.css';
 
 /**
  * What a wrong link lands on.

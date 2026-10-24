@@ -1,0 +1,45 @@
+name: Bug report
+description: Something on the site does the wrong thing.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Most pages keep their setup in the URL, so a link to the exact run is usually the fastest reproduction.
+  - type: input
+    id: url
+    attributes:
+      label: Link to the page
+      description: The full URL, including anything after `?`.
+      placeholder: https://sorting-visualization-29fd0.web.app/sorting?algo=quick&size=45&seed=2024
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps from opening that link to seeing the problem.
+      placeholder: |
+        1. Pressed Play
+        2. Stepped back three times
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 140 on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Anything red in the browser's developer console (F12), if you can get it.
+      render: text
