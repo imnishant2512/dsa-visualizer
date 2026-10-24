@@ -8,7 +8,7 @@ a minor version adds something, and a patch fixes something.
 
 Releasing is described in [CONTRIBUTING.md](CONTRIBUTING.md#releasing).
 
-## [2.0.0] — Unreleased
+## [2.0.0] — 2026-10-24
 
 The redesign, and the move to a production release process.
 
